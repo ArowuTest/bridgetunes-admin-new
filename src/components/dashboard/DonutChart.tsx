@@ -3,9 +3,17 @@ import styled from 'styled-components';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { RevenueByCategory } from '../../types/dashboard.types';
 
+// Add a new interface that matches the data structure passed from Dashboard
+interface DonutData {
+  labels: string[];
+  values: number[];
+}
+
 interface DonutChartProps {
-  data: RevenueByCategory[];
   title: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
+  data: RevenueByCategory[] | DonutData; // Accept both data formats
 }
 
 const ChartContainer = styled.div`
@@ -16,12 +24,31 @@ const ChartContainer = styled.div`
   margin-bottom: 1.5rem;
 `;
 
+const ChartHeader = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+`;
+
+const IconContainer = styled.div`
+  margin-right: 1rem;
+  color: ${props => props.theme.colors.primary};
+  font-size: 1.5rem;
+`;
+
+const TitleContainer = styled.div``;
+
 const ChartTitle = styled.h3`
   font-size: 1.25rem;
   color: #212529;
-  margin-top: 0;
-  margin-bottom: 1.5rem;
+  margin: 0;
   font-weight: 600;
+`;
+
+const ChartSubtitle = styled.p`
+  font-size: 0.875rem;
+  color: ${props => props.theme.colors.gray600};
+  margin: 0.25rem 0 0 0;
 `;
 
 const ChartContent = styled.div`
@@ -68,19 +95,25 @@ const TooltipValue = styled.span`
 // MTN brand colors and complementary colors
 const COLORS = ['#FFD100', '#004F9F', '#1EC7E6', '#FF6B00', '#6F2586', '#E30613', '#97D700', '#7C878E', '#00C389'];
 
-const DonutChart: React.FC<DonutChartProps> = ({ data, title }) => {
+const DonutChart: React.FC<DonutChartProps> = ({ data, title, subtitle, icon }) => {
+  // Transform data if it's in the DonutData format
+  const transformedData = Array.isArray(data)
+    ? data
+    : data.labels.map((label, index) => ({
+        category: label,
+        percentage: data.values[index],
+        amount: data.values[index] // Assuming value represents amount for tooltip
+      }));
+
   const renderCustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const item = payload[0];
       return (
         <CustomTooltip>
           <TooltipLabel>{item.name}</TooltipLabel>
+          {/* Display percentage from transformed data */}
           <TooltipItem>
-            <TooltipColor color={item.color} />
-            Amount: <TooltipValue>₦{item.value.toLocaleString()}</TooltipValue>
-          </TooltipItem>
-          <TooltipItem>
-            <TooltipColor color={item.color} />
+            <TooltipColor color={item.payload.fill} />
             Percentage: <TooltipValue>{item.payload.percentage}%</TooltipValue>
           </TooltipItem>
         </CustomTooltip>
@@ -91,24 +124,30 @@ const DonutChart: React.FC<DonutChartProps> = ({ data, title }) => {
 
   return (
     <ChartContainer>
-      <ChartTitle>{title}</ChartTitle>
+      <ChartHeader>
+        {icon && <IconContainer>{icon}</IconContainer>}
+        <TitleContainer>
+          <ChartTitle>{title}</ChartTitle>
+          {subtitle && <ChartSubtitle>{subtitle}</ChartSubtitle>}
+        </TitleContainer>
+      </ChartHeader>
       <ChartContent>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={data}
+              data={transformedData}
               cx="50%"
               cy="50%"
               innerRadius={60}
               outerRadius={100}
               fill="#8884d8"
               paddingAngle={2}
-              dataKey="amount"
+              dataKey="percentage" // Use percentage as the value for the pie slices
               nameKey="category"
-              label={({ category, percentage }) => `${category}: ${percentage}%`}
               labelLine={false}
+              label={({ category, percentage }) => `${category}: ${percentage}%`}
             >
-              {data.map((entry, index) => (
+              {transformedData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
@@ -121,4 +160,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ data, title }) => {
   );
 };
 
+// Add named export alongside default export
+export { DonutChart };
 export default DonutChart;
+

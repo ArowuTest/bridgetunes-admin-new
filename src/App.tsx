@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import styled from 'styled-components';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import styled, { ThemeProvider } from 'styled-components';
-import { AuthProvider } from './context/AuthContext';
-import { DemoModeProvider } from './context/DemoModeContext';
+import { ThemeProvider } from 'styled-components';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { DemoModeProvider, useDemoMode } from './context/DemoModeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DemoModeToggle from './components/DemoModeToggle';
+import Navigation from './components/Navigation';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -26,11 +28,26 @@ const theme = {
     info: brandColors.info,
     light: brandColors.light,
     dark: brandColors.dark,
-    gray: brandColors.gray
+    gray: brandColors.gray,
+    mtnYellow: brandColors.primary,
+    bridgetunesBlue: brandColors.secondary,
+    bridgetunesDark: brandColors.dark
   },
   fonts: {
     body: "'Roboto', sans-serif",
     heading: "'Roboto', sans-serif"
+  },
+  fontWeights: {
+    normal: 400,
+    medium: 500,
+    semibold: 600,
+    bold: 700
+  },
+  breakpoints: {
+    sm: '576px',
+    md: '768px',
+    lg: '992px',
+    xl: '1200px'
   }
 };
 
@@ -49,6 +66,12 @@ const Header = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 70px;
 `;
 
 const Logo = styled.div`
@@ -57,7 +80,6 @@ const Logo = styled.div`
   color: ${props => props.theme.colors.dark};
   display: flex;
   align-items: center;
-  
   span {
     color: ${props => props.theme.colors.primary};
   }
@@ -76,9 +98,17 @@ const MTNLogo = styled.div`
   color: black;
 `;
 
-const Content = styled.main`
+const Content = styled.main<{ isAuthenticated: boolean }>`
   flex: 1;
-  padding: 0;
+  margin-top: 70px; /* Space for header */
+  margin-left: ${props => props.isAuthenticated ? '250px' : '0'};
+  transition: margin-left 0.3s ease;
+  padding: 2rem;
+  
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    margin-left: 0;
+    padding: 1rem;
+  }
 `;
 
 const DemoModeBanner = styled.div`
@@ -87,66 +117,97 @@ const DemoModeBanner = styled.div`
   padding: 0.5rem 2rem;
   text-align: center;
   font-weight: 500;
+  position: fixed;
+  top: 70px;
+  left: 0;
+  right: 0;
+  z-index: 99;
 `;
+
+const AuthPageContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 70px);
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+`;
+
+// Separate component to use hooks at the top level
+const AppContent: React.FC = () => {
+  const { isDemoMode } = useDemoMode();
+  const { isAuthenticated } = useAuth();
+  
+  return (
+    <AppContainer>
+      <Header>
+        <Logo>
+          <MTNLogo>MTN</MTNLogo>
+          Bridgetunes <span>Admin</span>
+        </Logo>
+        <DemoModeToggle />
+      </Header>
+      
+      {isDemoMode && (
+        <DemoModeBanner>
+          Demo Mode Active - Data is stored locally and not sent to any server
+        </DemoModeBanner>
+      )}
+      
+      {isAuthenticated && <Navigation />}
+      
+      <Content isAuthenticated={isAuthenticated}>
+        <Routes>
+          <Route path="/login" element={
+            <AuthPageContainer>
+              <Login />
+            </AuthPageContainer>
+          } />
+          <Route path="/register" element={
+            <AuthPageContainer>
+              <Register />
+            </AuthPageContainer>
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/draws" element={
+            <ProtectedRoute>
+              <DrawManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/users" element={
+            <ProtectedRoute>
+              <UserManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          } />
+          <Route path="/csv" element={
+            <ProtectedRoute>
+              <CSVUpload />
+            </ProtectedRoute>
+          } />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Content>
+    </AppContainer>
+  );
+};
 
 const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <Router>
-        <AuthProvider>
-          <DemoModeProvider>
-            {({ isDemoMode }) => (
-              <AppContainer>
-                <Header>
-                  <Logo>
-                    <MTNLogo>MTN</MTNLogo>
-                    Bridgetunes <span>Admin</span>
-                  </Logo>
-                  <DemoModeToggle />
-                </Header>
-                
-                {isDemoMode && (
-                  <DemoModeBanner>
-                    Demo Mode Active - Data is stored locally and not sent to any server
-                  </DemoModeBanner>
-                )}
-                
-                <Content>
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/dashboard" element={
-                      <ProtectedRoute>
-                        <Dashboard />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/draws" element={
-                      <ProtectedRoute>
-                        <DrawManagement />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/users" element={
-                      <ProtectedRoute>
-                        <UserManagement />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/notifications" element={
-                      <ProtectedRoute>
-                        <Notifications />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/csv" element={
-                      <ProtectedRoute>
-                        <CSVUpload />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  </Routes>
-                </Content>
-              </AppContainer>
-            )}
-          </DemoModeProvider>
-        </AuthProvider>
+        <DemoModeProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </DemoModeProvider>
       </Router>
     </ThemeProvider>
   );

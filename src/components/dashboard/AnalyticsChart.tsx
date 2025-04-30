@@ -3,14 +3,18 @@ import styled from 'styled-components';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TimeSeriesData } from '../../types/dashboard.types';
 
+// Add a new interface that matches the data structure passed from Dashboard
+interface ChartData {
+  labels: string[];
+  rechargeAmounts: number[];
+  participantCounts: number[];
+}
+
 interface ChartProps {
-  data: TimeSeriesData[];
   title: string;
-  dataKeys: {
-    key: keyof Omit<TimeSeriesData, 'date'>;
-    color: string;
-    name: string;
-  }[];
+  subtitle?: string;
+  icon?: React.ReactNode;
+  data: TimeSeriesData[] | ChartData; // Accept both data formats
 }
 
 const ChartContainer = styled.div`
@@ -21,12 +25,31 @@ const ChartContainer = styled.div`
   margin-bottom: 1.5rem;
 `;
 
+const ChartHeader = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+`;
+
+const IconContainer = styled.div`
+  margin-right: 1rem;
+  color: ${props => props.theme.colors.primary};
+  font-size: 1.5rem;
+`;
+
+const TitleContainer = styled.div``;
+
 const ChartTitle = styled.h3`
   font-size: 1.25rem;
   color: #212529;
-  margin-top: 0;
-  margin-bottom: 1.5rem;
+  margin: 0;
   font-weight: 600;
+`;
+
+const ChartSubtitle = styled.p`
+  font-size: 0.875rem;
+  color: ${props => props.theme.colors.gray600};
+  margin: 0.25rem 0 0 0;
 `;
 
 const ChartContent = styled.div`
@@ -67,7 +90,16 @@ const TooltipValue = styled.span`
   font-weight: 500;
 `;
 
-const AnalyticsChart: React.FC<ChartProps> = ({ data, title, dataKeys }) => {
+const AnalyticsChart: React.FC<ChartProps> = ({ data, title, subtitle, icon }) => {
+  // Transform data if it's in the ChartData format
+  const transformedData = Array.isArray(data) 
+    ? data 
+    : data.labels.map((label, index) => ({
+        date: label,
+        revenue: data.rechargeAmounts[index],
+        users: data.participantCounts[index]
+      }));
+
   const renderCustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -87,11 +119,17 @@ const AnalyticsChart: React.FC<ChartProps> = ({ data, title, dataKeys }) => {
 
   return (
     <ChartContainer>
-      <ChartTitle>{title}</ChartTitle>
+      <ChartHeader>
+        {icon && <IconContainer>{icon}</IconContainer>}
+        <TitleContainer>
+          <ChartTitle>{title}</ChartTitle>
+          {subtitle && <ChartSubtitle>{subtitle}</ChartSubtitle>}
+        </TitleContainer>
+      </ChartHeader>
       <ChartContent>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            data={data}
+            data={transformedData}
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -109,17 +147,22 @@ const AnalyticsChart: React.FC<ChartProps> = ({ data, title, dataKeys }) => {
             />
             <Tooltip content={renderCustomTooltip} />
             <Legend />
-            {dataKeys.map((item, index) => (
-              <Line
-                key={index}
-                type="monotone"
-                dataKey={item.key}
-                name={item.name}
-                stroke={item.color}
-                activeDot={{ r: 6 }}
-                strokeWidth={2}
-              />
-            ))}
+            <Line
+              type="monotone"
+              dataKey="revenue"
+              name="Revenue"
+              stroke="#FFD100"
+              activeDot={{ r: 6 }}
+              strokeWidth={2}
+            />
+            <Line
+              type="monotone"
+              dataKey="users"
+              name="Users"
+              stroke="#004F9F"
+              activeDot={{ r: 6 }}
+              strokeWidth={2}
+            />
           </LineChart>
         </ResponsiveContainer>
       </ChartContent>
@@ -127,4 +170,6 @@ const AnalyticsChart: React.FC<ChartProps> = ({ data, title, dataKeys }) => {
   );
 };
 
+// Add named export alongside default export
+export { AnalyticsChart };
 export default AnalyticsChart;

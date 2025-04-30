@@ -1,224 +1,246 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Notification } from '../../types/notification.types';
-import { FaRedo, FaTrash, FaEye } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye, FaPaperPlane } from 'react-icons/fa';
+import Button from '../Button';
+import DataTable from '../DataTable';
 
-interface NotificationTableProps {
-  notifications: Notification[];
-  onResend: (id: string) => void;
-  onDelete: (id: string) => void;
-  onView: (notification: Notification) => void;
-}
-
-const TableContainer = styled.div`
-  background-color: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-bottom: 1.5rem;
-  overflow-x: auto;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-`;
-
-const TableHead = styled.thead`
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #e9ecef;
-`;
-
-const TableBody = styled.tbody`
-  tr:nth-child(even) {
-    background-color: #f8f9fa;
-  }
-  
-  tr:hover {
-    background-color: rgba(255, 209, 0, 0.05);
-  }
-`;
-
-const TableRow = styled.tr`
-  border-bottom: 1px solid #e9ecef;
-`;
-
-const TableHeader = styled.th`
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: #495057;
-`;
-
-const TableCell = styled.td`
-  padding: 1rem;
-  color: #212529;
-`;
-
-const NotificationType = styled.span<{ type: string }>`
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+// Styled components
+const StatusBadge = styled.span<{ status: string }>`
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border-radius: 50px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: ${props => props.theme.fontWeights.medium};
   text-transform: uppercase;
-  background-color: ${props => 
-    props.type === 'info' ? '#cfe2ff' : 
-    props.type === 'success' ? '#d1e7dd' : 
-    props.type === 'warning' ? '#fff3cd' : 
-    '#f8d7da'};
-  color: ${props => 
-    props.type === 'info' ? '#084298' : 
-    props.type === 'success' ? '#0f5132' : 
-    props.type === 'warning' ? '#856404' : 
-    '#721c24'};
-`;
-
-const NotificationStatus = styled.span<{ status: string }>`
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  background-color: ${props => 
-    props.status === 'sent' ? '#d1e7dd' : 
-    props.status === 'pending' ? '#fff3cd' : 
-    '#f8d7da'};
-  color: ${props => 
-    props.status === 'sent' ? '#0f5132' : 
-    props.status === 'pending' ? '#856404' : 
-    '#721c24'};
-`;
-
-const NotificationChannel = styled.span<{ channel: string }>`
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  background-color: ${props => 
-    props.channel === 'email' ? '#e2e3e5' : 
-    props.channel === 'sms' ? '#d1e7dd' : 
-    '#cfe2ff'};
-  color: ${props => 
-    props.channel === 'email' ? '#41464b' : 
-    props.channel === 'sms' ? '#0f5132' : 
-    '#084298'};
-`;
-
-const ActionButton = styled.button`
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  background-color: transparent;
-  color: #6c757d;
-  transition: all 0.2s;
+  letter-spacing: 0.5px;
   
-  &:hover {
-    background-color: #f8f9fa;
-    color: #212529;
-  }
+  ${props => {
+    switch (props.status) {
+      case 'draft':
+        return `
+          background-color: ${props.theme.colors.light};
+          color: ${props.theme.colors.gray};
+        `;
+      case 'scheduled':
+        return `
+          background-color: ${props.theme.colors.info + '20'};
+          color: ${props.theme.colors.info};
+        `;
+      case 'sending':
+        return `
+          background-color: ${props.theme.colors.warning + '20'};
+          color: ${props.theme.colors.warning};
+        `;
+      case 'sent':
+        return `
+          background-color: ${props.theme.colors.success + '20'};
+          color: ${props.theme.colors.success};
+        `;
+      case 'failed':
+        return `
+          background-color: ${props.theme.colors.danger + '20'};
+          color: ${props.theme.colors.danger};
+        `;
+      default:
+        return `
+          background-color: ${props.theme.colors.light};
+          color: ${props.theme.colors.gray};
+        `;
+    }
+  }}
+`;
+
+const TypeBadge = styled.span<{ type: string }>`
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: ${props => props.theme.fontWeights.medium};
   
-  &:focus {
-    outline: none;
-  }
+  ${props => {
+    switch (props.type) {
+      case 'draw_announcement':
+        return `
+          background-color: ${props.theme.colors.primary + '20'};
+          color: ${props.theme.colors.primary};
+        `;
+      case 'win_notification':
+        return `
+          background-color: ${props.theme.colors.success + '20'};
+          color: ${props.theme.colors.success};
+        `;
+      case 'recharge_confirmation':
+        return `
+          background-color: ${props.theme.colors.info + '20'};
+          color: ${props.theme.colors.info};
+        `;
+      default:
+        return `
+          background-color: ${props.theme.colors.light};
+          color: ${props.theme.colors.gray};
+        `;
+    }
+  }}
 `;
 
-const ActionButtonDanger = styled(ActionButton)`
-  &:hover {
-    background-color: #f8d7da;
-    color: #dc3545;
-  }
-`;
-
-const ActionButtonPrimary = styled(ActionButton)`
-  &:hover {
-    background-color: rgba(255, 209, 0, 0.1);
-    color: #FFD100;
-  }
-`;
-
-const ActionButtonInfo = styled(ActionButton)`
-  &:hover {
-    background-color: #cfe2ff;
-    color: #0d6efd;
-  }
-`;
-
-const ActionsContainer = styled.div`
+const ActionButtons = styled.div`
   display: flex;
   gap: 0.5rem;
 `;
 
-const TruncatedText = styled.div`
-  max-width: 200px;
+const MessagePreview = styled.div`
+  font-size: 0.875rem;
+  color: ${props => props.theme.colors.gray};
+  max-width: 300px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
 
+// Updated Notification interface to match the mock data structure
+export interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  content: string;
+  status: string;
+  segment: string[];
+  sentCount: number;
+  deliveredCount: number;
+  createdAt: string;
+  sentAt: string | null;
+}
+
+interface NotificationTableProps {
+  notifications: Notification[];
+  onEdit: (notification: Notification) => void;
+  formatDate: (date: string | null) => string;
+}
+
 const NotificationTable: React.FC<NotificationTableProps> = ({ 
-  notifications, 
-  onResend, 
-  onDelete, 
-  onView 
+  notifications,
+  onEdit,
+  formatDate
 }) => {
+  // Handle view notification
+  const handleViewNotification = (notification: Notification) => {
+    console.log(`View notification ${notification.id}`);
+    // In a real implementation, this would open a modal or navigate to a detail page
+  };
+  
+  // Handle delete notification
+  const handleDeleteNotification = (notification: Notification) => {
+    console.log(`Delete notification ${notification.id}`);
+    // In a real implementation, this would show a confirmation dialog
+  };
+  
+  // Handle send notification
+  const handleSendNotification = (notification: Notification) => {
+    console.log(`Send notification ${notification.id}`);
+    // In a real implementation, this would show a confirmation dialog
+  };
+  
+  // Table columns
+  const columns = [
+    {
+      key: 'title',
+      header: 'Title',
+      render: (notification: Notification) => (
+        <div>
+          <div>{notification.title}</div>
+          <MessagePreview>{notification.content}</MessagePreview>
+        </div>
+      )
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      render: (notification: Notification) => (
+        <TypeBadge type={notification.type}>
+          {notification.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+        </TypeBadge>
+      )
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (notification: Notification) => (
+        <StatusBadge status={notification.status}>
+          {notification.status}
+        </StatusBadge>
+      )
+    },
+    {
+      key: 'sentCount',
+      header: 'Recipients',
+      render: (notification: Notification) => (
+        <div>{notification.sentCount.toLocaleString()}</div>
+      )
+    },
+    {
+      key: 'createdAt',
+      header: 'Created',
+      render: (notification: Notification) => (
+        <div>{formatDate(notification.createdAt)}</div>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (notification: Notification) => (
+        <ActionButtons>
+          <Button 
+            variant="info" 
+            size="small" 
+            outlined
+            icon={<FaEye />}
+            onClick={() => handleViewNotification(notification)}
+          />
+          <Button 
+            variant="primary" 
+            size="small" 
+            outlined
+            icon={<FaEdit />}
+            onClick={() => onEdit(notification)}
+          />
+          {notification.status === 'draft' && (
+            <Button 
+              variant="success" 
+              size="small" 
+              outlined
+              icon={<FaPaperPlane />}
+              onClick={() => handleSendNotification(notification)}
+            />
+          )}
+          <Button 
+            variant="danger" 
+            size="small" 
+            outlined
+            icon={<FaTrash />}
+            onClick={() => handleDeleteNotification(notification)}
+          />
+        </ActionButtons>
+      )
+    }
+  ];
+  
   return (
-    <TableContainer>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableHeader>Title</TableHeader>
-            <TableHeader>Recipient</TableHeader>
-            <TableHeader>Type</TableHeader>
-            <TableHeader>Channel</TableHeader>
-            <TableHeader>Status</TableHeader>
-            <TableHeader>Created At</TableHeader>
-            <TableHeader>Actions</TableHeader>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {notifications.map(notification => (
-            <TableRow key={notification.id}>
-              <TableCell>
-                <TruncatedText>{notification.title}</TruncatedText>
-              </TableCell>
-              <TableCell>{notification.recipient}</TableCell>
-              <TableCell>
-                <NotificationType type={notification.type}>{notification.type}</NotificationType>
-              </TableCell>
-              <TableCell>
-                <NotificationChannel channel={notification.channel}>{notification.channel}</NotificationChannel>
-              </TableCell>
-              <TableCell>
-                <NotificationStatus status={notification.status}>{notification.status}</NotificationStatus>
-              </TableCell>
-              <TableCell>{new Date(notification.createdAt).toLocaleDateString()}</TableCell>
-              <TableCell>
-                <ActionsContainer>
-                  <ActionButtonInfo onClick={() => onView(notification)} title="View Notification">
-                    <FaEye />
-                  </ActionButtonInfo>
-                  {notification.status !== 'sent' && (
-                    <ActionButtonPrimary onClick={() => onResend(notification.id)} title="Resend Notification">
-                      <FaRedo />
-                    </ActionButtonPrimary>
-                  )}
-                  <ActionButtonDanger onClick={() => onDelete(notification.id)} title="Delete Notification">
-                    <FaTrash />
-                  </ActionButtonDanger>
-                </ActionsContainer>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <DataTable
+      columns={columns}
+      data={notifications}
+      keyExtractor={(item) => item.id}
+      emptyMessage="No notifications found. Create a new notification to get started."
+      pagination={{
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: notifications.length,
+        itemsPerPage: 10,
+        onPageChange: (page) => console.log(`Go to page ${page}`)
+      }}
+    />
   );
 };
 
+// Add named export alongside default export
+export { NotificationTable };
 export default NotificationTable;

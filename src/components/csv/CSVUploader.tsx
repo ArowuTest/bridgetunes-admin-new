@@ -1,271 +1,171 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
-import { FaUpload, FaFileAlt, FaCheck, FaTimes, FaDownload } from 'react-icons/fa';
-import { CSVUploadSummary } from '../../types/csv.types';
+import { FaUpload, FaFileAlt, FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
+import Button from '../Button';
 
-interface CSVUploaderProps {
-  onUpload: (file: File) => Promise<void>;
-  onValidate: (file: File) => Promise<CSVUploadSummary>;
-  onDownloadTemplate: () => void;
-  isUploading: boolean;
-  isValidating: boolean;
-}
-
+// Styled components
 const UploaderContainer = styled.div`
-  background-color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const DropZone = styled.div<{ isDragActive: boolean; isError: boolean }>`
+  border: 2px dashed ${props => {
+    if (props.isError) return props.theme.colors.danger;
+    return props.isDragActive ? props.theme.colors.primary : props.theme.colors.light;
+  }};
   border-radius: 8px;
   padding: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-bottom: 1.5rem;
-`;
-
-const UploadArea = styled.div<{ isDragActive: boolean }>`
-  border: 2px dashed ${props => props.isDragActive ? '#FFD100' : '#dee2e6'};
-  border-radius: 8px;
-  padding: 3rem 2rem;
   text-align: center;
-  background-color: ${props => props.isDragActive ? 'rgba(255, 209, 0, 0.05)' : '#f8f9fa'};
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  background-color: ${props => props.isDragActive ? props.theme.colors.primary + '10' : 'transparent'};
   
   &:hover {
-    border-color: #FFD100;
-    background-color: rgba(255, 209, 0, 0.05);
+    border-color: ${props => props.isError ? props.theme.colors.danger : props.theme.colors.primary};
+    background-color: ${props => props.theme.colors.primary + '05'};
   }
-`;
-
-const UploadIcon = styled.div`
-  font-size: 3rem;
-  color: #6c757d;
-  margin-bottom: 1rem;
-`;
-
-const UploadText = styled.div`
-  font-size: 1.25rem;
-  color: #495057;
-  margin-bottom: 0.5rem;
-`;
-
-const UploadSubtext = styled.div`
-  font-size: 0.875rem;
-  color: #6c757d;
 `;
 
 const FileInput = styled.input`
   display: none;
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  justify-content: space-between;
-  margin-top: 1.5rem;
+const UploadIcon = styled.div`
+  font-size: 2.5rem;
+  color: ${props => props.theme.colors.primary};
+  margin-bottom: 1rem;
 `;
 
-const Button = styled.button<{ variant?: string }>`
-  padding: 0.75rem 1.5rem;
-  background-color: ${props => 
-    props.variant === 'primary' ? '#FFD100' : 
-    props.variant === 'secondary' ? '#f8f9fa' : 
-    props.variant === 'success' ? '#28a745' : 
-    '#f8f9fa'};
-  color: ${props => 
-    props.variant === 'primary' ? '#000' : 
-    props.variant === 'secondary' ? '#212529' : 
-    props.variant === 'success' ? '#fff' : 
-    '#212529'};
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  
-  &:hover {
-    background-color: ${props => 
-      props.variant === 'primary' ? '#E6BC00' : 
-      props.variant === 'secondary' ? '#e2e6ea' : 
-      props.variant === 'success' ? '#218838' : 
-      '#e2e6ea'};
-  }
-  
-  &:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
+const UploadText = styled.div`
+  font-size: 1.1rem;
+  font-weight: ${props => props.theme.fontWeights.medium};
+  margin-bottom: 0.5rem;
+  color: ${props => props.theme.colors.dark};
 `;
 
-const SelectedFileContainer = styled.div`
+const UploadSubtext = styled.div`
+  font-size: 0.9rem;
+  color: ${props => props.theme.colors.gray};
+`;
+
+const FilePreview = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 1rem;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  margin-top: 1.5rem;
-`;
-
-const FileInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  border-radius: 8px;
+  background-color: ${props => props.theme.colors.light};
+  margin-top: 1rem;
 `;
 
 const FileIcon = styled.div`
   font-size: 1.5rem;
-  color: #6c757d;
+  color: ${props => props.theme.colors.primary};
+  margin-right: 1rem;
+`;
+
+const FileDetails = styled.div`
+  flex: 1;
 `;
 
 const FileName = styled.div`
-  font-weight: 500;
-  color: #212529;
+  font-weight: ${props => props.theme.fontWeights.medium};
+  margin-bottom: 0.25rem;
+  color: ${props => props.theme.colors.dark};
 `;
 
 const FileSize = styled.div`
-  font-size: 0.875rem;
-  color: #6c757d;
+  font-size: 0.8rem;
+  color: ${props => props.theme.colors.gray};
 `;
 
-const FileActions = styled.div`
-  display: flex;
-  gap: 0.5rem;
+const ValidationResults = styled.div`
+  margin-top: 1rem;
 `;
 
-const ActionButton = styled.button`
-  width: 36px;
-  height: 36px;
-  border-radius: 4px;
+const ValidationTitle = styled.div`
+  font-weight: ${props => props.theme.fontWeights.semibold};
+  margin-bottom: 0.5rem;
+  color: ${props => props.theme.colors.dark};
+`;
+
+const ValidationItem = styled.div<{ isValid: boolean }>`
   display: flex;
   align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  background-color: transparent;
-  color: #6c757d;
-  transition: all 0.2s;
+  margin-bottom: 0.5rem;
+  color: ${props => props.isValid ? props.theme.colors.success : props.theme.colors.danger};
   
-  &:hover {
-    background-color: #f8f9fa;
-    color: #212529;
-  }
-  
-  &:focus {
-    outline: none;
+  svg {
+    margin-right: 0.5rem;
   }
 `;
 
 const LoadingSpinner = styled.div`
-  display: inline-block;
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 3px solid rgba(0, 0, 0, 0.1);
-  border-radius: 50%;
-  border-top-color: #FFD100;
-  animation: spin 1s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0;
+  
+  svg {
+    animation: spin 1s linear infinite;
+  }
   
   @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 `;
 
-const ValidationSummary = styled.div`
-  margin-top: 1.5rem;
-  padding: 1.5rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-`;
+interface CSVUploaderProps {
+  onUploadStart: () => void;
+  onUploadSuccess: (data: any[]) => void;
+  onUploadError: (error: string) => void;
+}
 
-const SummaryTitle = styled.h3`
-  font-size: 1.25rem;
-  color: #212529;
-  margin: 0 0 1rem 0;
-`;
+interface CSVRecord {
+  msisdn: string;
+  rechargeAmount: string;
+  optInStatus: string;
+  rechargeDate: string;
+}
 
-const SummaryGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-`;
-
-const SummaryItem = styled.div`
-  padding: 1rem;
-  background-color: white;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-`;
-
-const SummaryLabel = styled.div`
-  font-size: 0.875rem;
-  color: #6c757d;
-  margin-bottom: 0.5rem;
-`;
-
-const SummaryValue = styled.div<{ isNegative?: boolean }>`
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: ${props => props.isNegative ? '#dc3545' : '#212529'};
-`;
-
-const DistributionContainer = styled.div`
-  margin-top: 1.5rem;
-`;
-
-const DistributionTitle = styled.h4`
-  font-size: 1rem;
-  color: #212529;
-  margin: 0 0 0.75rem 0;
-`;
-
-const DistributionGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 0.75rem;
-`;
-
-const DistributionItem = styled.div`
-  padding: 0.75rem;
-  background-color: white;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  display: flex;
-  justify-content: space-between;
-`;
-
-const DistributionLabel = styled.div`
-  font-size: 0.875rem;
-  color: #212529;
-`;
-
-const DistributionValue = styled.div`
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #212529;
-`;
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
-  
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-const CSVUploader: React.FC<CSVUploaderProps> = ({ 
-  onUpload, 
-  onValidate, 
-  onDownloadTemplate, 
-  isUploading, 
-  isValidating 
+const CSVUploader: React.FC<CSVUploaderProps> = ({
+  onUploadStart,
+  onUploadSuccess,
+  onUploadError
 }) => {
   const [isDragActive, setIsDragActive] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [validationSummary, setValidationSummary] = useState<CSVUploadSummary | null>(null);
+  const [isValidating, setIsValidating] = useState<boolean>(false);
+  const [validationResults, setValidationResults] = useState<{ field: string; isValid: boolean; message: string }[]>([]);
+  const [isError, setIsError] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Handle file selection
+  const handleFileSelect = (file: File) => {
+    if (!file) return;
+    
+    // Check file type
+    if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+      onUploadError('Please upload a CSV file.');
+      setIsError(true);
+      return;
+    }
+    
+    setSelectedFile(file);
+    setIsError(false);
+    validateFile(file);
+  };
+  
+  // Handle file input change
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFileSelect(e.target.files[0]);
+    }
+  };
+  
+  // Handle drag events
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -289,193 +189,249 @@ const CSVUploader: React.FC<CSVUploaderProps> = ({
     setIsDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
-        setSelectedFile(file);
-        setValidationSummary(null);
-      } else {
-        alert('Please upload a CSV file');
-      }
+      handleFileSelect(e.dataTransfer.files[0]);
     }
   };
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
-        setSelectedFile(file);
-        setValidationSummary(null);
-      } else {
-        alert('Please upload a CSV file');
-      }
+  // Open file dialog
+  const openFileDialog = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
   
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-    setValidationSummary(null);
+  // Format file size
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' bytes';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
   
-  const handleValidateFile = async () => {
-    if (!selectedFile) return;
+  // Validate CSV file
+  const validateFile = (file: File) => {
+    setIsValidating(true);
+    onUploadStart();
     
-    try {
-      const summary = await onValidate(selectedFile);
-      setValidationSummary(summary);
-    } catch (error) {
-      console.error('Validation error:', error);
-      alert('Failed to validate file');
-    }
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const lines = content.split('\n');
+        
+        // Check if file has content
+        if (lines.length < 2) {
+          onUploadError('The CSV file is empty or has no data rows.');
+          setIsValidating(false);
+          return;
+        }
+        
+        // Check header row
+        const header = lines[0].split(',');
+        const expectedHeaders = ['MSISDN', 'Recharge Amount (Naira)', 'Opt-In Status', 'Recharge Date'];
+        const headerValidation = expectedHeaders.every(expectedHeader => 
+          header.some(h => h.trim() === expectedHeader)
+        );
+        
+        if (!headerValidation) {
+          onUploadError('CSV header does not match the expected format. Please use the template provided.');
+          setIsValidating(false);
+          return;
+        }
+        
+        // Validate data rows
+        const validationResults = [
+          { field: 'Header format', isValid: headerValidation, message: 'CSV headers match expected format' },
+          { field: 'Data rows', isValid: lines.length > 1, message: `Found ${lines.length - 1} data rows` }
+        ];
+        
+        // Parse and validate each row
+        const data: CSVRecord[] = [];
+        let hasErrors = false;
+        
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue; // Skip empty lines
+          
+          const values = line.split(',');
+          
+          if (values.length !== 4) {
+            validationResults.push({
+              field: `Row ${i}`,
+              isValid: false,
+              message: `Row ${i} does not have the expected number of columns`
+            });
+            hasErrors = true;
+            continue;
+          }
+          
+          const [msisdn, rechargeAmount, optInStatus, rechargeDate] = values;
+          
+          // Validate MSISDN (phone number)
+          const isValidMSISDN = /^0[0-9]{10}$/.test(msisdn.trim());
+          if (!isValidMSISDN) {
+            validationResults.push({
+              field: `MSISDN in row ${i}`,
+              isValid: false,
+              message: `Invalid phone number format in row ${i}`
+            });
+            hasErrors = true;
+          }
+          
+          // Validate Recharge Amount
+          const isValidAmount = !isNaN(Number(rechargeAmount.trim()));
+          if (!isValidAmount) {
+            validationResults.push({
+              field: `Recharge Amount in row ${i}`,
+              isValid: false,
+              message: `Invalid recharge amount in row ${i}`
+            });
+            hasErrors = true;
+          }
+          
+          // Validate Opt-In Status
+          const isValidOptIn = ['Yes', 'No'].includes(optInStatus.trim());
+          if (!isValidOptIn) {
+            validationResults.push({
+              field: `Opt-In Status in row ${i}`,
+              isValid: false,
+              message: `Invalid opt-in status in row ${i} (should be 'Yes' or 'No')`
+            });
+            hasErrors = true;
+          }
+          
+          // Validate Recharge Date
+          const dateRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+          const isValidDate = dateRegex.test(rechargeDate.trim());
+          if (!isValidDate) {
+            validationResults.push({
+              field: `Recharge Date in row ${i}`,
+              isValid: false,
+              message: `Invalid date format in row ${i} (should be DD/MM/YYYY)`
+            });
+            hasErrors = true;
+          }
+          
+          // Add valid row to data
+          if (isValidMSISDN && isValidAmount && isValidOptIn && isValidDate) {
+            data.push({
+              msisdn: msisdn.trim(),
+              rechargeAmount: rechargeAmount.trim(),
+              optInStatus: optInStatus.trim(),
+              rechargeDate: rechargeDate.trim()
+            });
+          }
+        }
+        
+        setValidationResults(validationResults);
+        
+        if (hasErrors) {
+          onUploadError('CSV file contains validation errors. Please fix them and try again.');
+        } else {
+          // In production mode, this would call an API to upload the data
+          // For now, we'll simulate an API call with a timeout
+          setTimeout(() => {
+            onUploadSuccess(data);
+            setIsValidating(false);
+          }, 1500);
+        }
+      } catch (error) {
+        onUploadError('Error parsing CSV file. Please check the file format.');
+        setIsValidating(false);
+      }
+    };
+    
+    reader.onerror = () => {
+      onUploadError('Error reading the file. Please try again.');
+      setIsValidating(false);
+    };
+    
+    reader.readAsText(file);
   };
   
-  const handleUploadFile = async () => {
-    if (!selectedFile) return;
-    
-    try {
-      await onUpload(selectedFile);
-      setSelectedFile(null);
-      setValidationSummary(null);
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert('Failed to upload file');
+  // Handle upload button click
+  const handleUpload = () => {
+    if (!selectedFile) {
+      onUploadError('Please select a file to upload.');
+      return;
     }
+    
+    // In a real implementation, this would call an API to upload the file
+    // For now, we'll just validate the file again
+    validateFile(selectedFile);
   };
   
   return (
     <UploaderContainer>
-      <UploadArea
+      <DropZone
         isDragActive={isDragActive}
+        isError={isError}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        onClick={() => document.getElementById('file-input')?.click()}
+        onClick={openFileDialog}
       >
+        <FileInput
+          type="file"
+          ref={fileInputRef}
+          accept=".csv"
+          onChange={handleFileInputChange}
+        />
+        
         <UploadIcon>
           <FaUpload />
         </UploadIcon>
+        
         <UploadText>
           {isDragActive ? 'Drop your CSV file here' : 'Drag & Drop your CSV file here'}
         </UploadText>
+        
         <UploadSubtext>
           or click to browse files
         </UploadSubtext>
-        <FileInput
-          id="file-input"
-          type="file"
-          accept=".csv"
-          onChange={handleFileChange}
-        />
-      </UploadArea>
+      </DropZone>
       
       {selectedFile && (
-        <SelectedFileContainer>
-          <FileInfo>
-            <FileIcon>
-              <FaFileAlt />
-            </FileIcon>
-            <div>
-              <FileName>{selectedFile.name}</FileName>
-              <FileSize>{formatFileSize(selectedFile.size)}</FileSize>
-            </div>
-          </FileInfo>
-          <FileActions>
-            <ActionButton onClick={handleRemoveFile} title="Remove file">
-              <FaTimes />
-            </ActionButton>
-          </FileActions>
-        </SelectedFileContainer>
+        <FilePreview>
+          <FileIcon>
+            <FaFileAlt />
+          </FileIcon>
+          
+          <FileDetails>
+            <FileName>{selectedFile.name}</FileName>
+            <FileSize>{formatFileSize(selectedFile.size)}</FileSize>
+          </FileDetails>
+          
+          <Button
+            variant="primary"
+            size="small"
+            onClick={handleUpload}
+            disabled={isValidating}
+          >
+            {isValidating ? 'Validating...' : 'Upload'}
+          </Button>
+        </FilePreview>
       )}
       
-      <ButtonGroup>
-        <Button
-          variant="secondary"
-          onClick={onDownloadTemplate}
-        >
-          <FaDownload /> Download Template
-        </Button>
-        
-        {selectedFile && (
-          <>
-            <div>
-              <Button
-                variant="secondary"
-                onClick={handleValidateFile}
-                disabled={isValidating || !selectedFile}
-                style={{ marginRight: '0.75rem' }}
-              >
-                {isValidating ? <LoadingSpinner /> : <FaCheck />} Validate
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleUploadFile}
-                disabled={isUploading || !selectedFile}
-              >
-                {isUploading ? <LoadingSpinner /> : <FaUpload />} Upload
-              </Button>
-            </div>
-          </>
-        )}
-      </ButtonGroup>
+      {isValidating && (
+        <LoadingSpinner>
+          <FaSpinner size={24} />
+          <span style={{ marginLeft: '0.5rem' }}>Validating and processing file...</span>
+        </LoadingSpinner>
+      )}
       
-      {validationSummary && (
-        <ValidationSummary>
-          <SummaryTitle>Validation Summary</SummaryTitle>
-          <SummaryGrid>
-            <SummaryItem>
-              <SummaryLabel>Total Records</SummaryLabel>
-              <SummaryValue>{validationSummary.totalRecords}</SummaryValue>
-            </SummaryItem>
-            <SummaryItem>
-              <SummaryLabel>Valid Records</SummaryLabel>
-              <SummaryValue>{validationSummary.validRecords}</SummaryValue>
-            </SummaryItem>
-            <SummaryItem>
-              <SummaryLabel>Invalid Records</SummaryLabel>
-              <SummaryValue isNegative={validationSummary.invalidRecords > 0}>
-                {validationSummary.invalidRecords}
-              </SummaryValue>
-            </SummaryItem>
-            <SummaryItem>
-              <SummaryLabel>Duplicate Records</SummaryLabel>
-              <SummaryValue isNegative={validationSummary.duplicateRecords > 0}>
-                {validationSummary.duplicateRecords}
-              </SummaryValue>
-            </SummaryItem>
-            <SummaryItem>
-              <SummaryLabel>Opt-In Records</SummaryLabel>
-              <SummaryValue>{validationSummary.optInRecords}</SummaryValue>
-            </SummaryItem>
-            <SummaryItem>
-              <SummaryLabel>Opt-Out Records</SummaryLabel>
-              <SummaryValue>{validationSummary.optOutRecords}</SummaryValue>
-            </SummaryItem>
-          </SummaryGrid>
+      {validationResults.length > 0 && (
+        <ValidationResults>
+          <ValidationTitle>Validation Results:</ValidationTitle>
           
-          <DistributionContainer>
-            <DistributionTitle>Recharge Amount Distribution</DistributionTitle>
-            <DistributionGrid>
-              {Object.entries(validationSummary.rechargeAmountDistribution).map(([amount, count]) => (
-                <DistributionItem key={amount}>
-                  <DistributionLabel>₦{amount}</DistributionLabel>
-                  <DistributionValue>{count}</DistributionValue>
-                </DistributionItem>
-              ))}
-            </DistributionGrid>
-          </DistributionContainer>
-          
-          <DistributionContainer>
-            <DistributionTitle>Date Distribution</DistributionTitle>
-            <DistributionGrid>
-              {Object.entries(validationSummary.dateDistribution).map(([date, count]) => (
-                <DistributionItem key={date}>
-                  <DistributionLabel>{date}</DistributionLabel>
-                  <DistributionValue>{count}</DistributionValue>
-                </DistributionItem>
-              ))}
-            </DistributionGrid>
-          </DistributionContainer>
-        </ValidationSummary>
+          {validationResults.map((result, index) => (
+            <ValidationItem key={index} isValid={result.isValid}>
+              {result.isValid ? <FaCheck /> : <FaTimes />}
+              {result.message}
+            </ValidationItem>
+          ))}
+        </ValidationResults>
       )}
     </UploaderContainer>
   );

@@ -1,180 +1,173 @@
-import React, { createContext, useReducer, useContext, useEffect } from 'react';
-import { authService } from '../services/api.service';
-import { AuthState, User } from '../types/auth.types';
-import jwtDecode from 'jwt-decode';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDemoMode } from './DemoModeContext';
 
-// Define action types
-type AuthAction =
-  | { type: 'LOGIN_SUCCESS'; payload: { user: User; token: string } }
-  | { type: 'LOGIN_FAIL'; payload: string }
-  | { type: 'REGISTER_SUCCESS' }
-  | { type: 'REGISTER_FAIL'; payload: string }
-  | { type: 'USER_LOADED'; payload: User }
-  | { type: 'AUTH_ERROR' }
-  | { type: 'LOGOUT' }
-  | { type: 'CLEAR_ERRORS' }
-  | { type: 'SET_LOADING' };
+// Define user interface
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  role: 'admin' | 'manager' | 'viewer';
+  name: string;
+}
 
-// Initial state
-const initialState: AuthState = {
-  isAuthenticated: false,
-  user: null,
-  loading: true,
-  error: null
-};
-
-// Create context
-const AuthContext = createContext<{
-  state: AuthState;
-  login: (email: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string, role: 'admin' | 'manager' | 'viewer') => Promise<void>;
+interface AuthContextType {
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  clearErrors: () => void;
-}>({
-  state: initialState,
-  login: async () => {},
-  register: async () => {},
-  logout: () => {},
-  clearErrors: () => {}
-});
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
+  resetPassword: (email: string) => Promise<boolean>;
+}
 
-// Create reducer
-const authReducer = (state: AuthState, action: AuthAction): AuthState => {
-  switch (action.type) {
-    case 'SET_LOADING':
-      return {
-        ...state,
-        loading: true
-      };
-    case 'USER_LOADED':
-      return {
-        ...state,
-        isAuthenticated: true,
-        loading: false,
-        user: action.payload
-      };
-    case 'LOGIN_SUCCESS':
-      localStorage.setItem('token', action.payload.token);
-      return {
-        ...state,
-        isAuthenticated: true,
-        loading: false,
-        user: action.payload.user,
-        error: null
-      };
-    case 'REGISTER_SUCCESS':
-      return {
-        ...state,
-        loading: false,
-        error: null
-      };
-    case 'AUTH_ERROR':
-    case 'LOGIN_FAIL':
-    case 'REGISTER_FAIL':
-    case 'LOGOUT':
-      localStorage.removeItem('token');
-      return {
-        ...state,
-        token: null,
-        isAuthenticated: false,
-        loading: false,
-        user: null,
-        error: action.type === 'LOGOUT' ? null : action.payload
-      };
-    case 'CLEAR_ERRORS':
-      return {
-        ...state,
-        error: null
-      };
-    default:
-      return state;
-  }
-};
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Create provider component
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, initialState);
+// Local storage keys
+const TOKEN_KEY = 'bridgetunes_auth_token';
+const USER_KEY = 'bridgetunes_user';
 
-  // Load user if token exists
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const { isDemoMode } = useDemoMode();
+  const navigate = useNavigate();
+
+  // Check for existing auth on mount
   useEffect(() => {
-    const loadUser = async () => {
-      const token = localStorage.getItem('token');
+    const checkAuth = () => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const savedUser = localStorage.getItem(USER_KEY);
       
-      if (!token) {
-        dispatch({ type: 'AUTH_ERROR' });
-        return;
+      if (token && savedUser) {
+        setIsAuthenticated(true);
+        setUser(JSON.parse(savedUser));
       }
       
-      try {
-        // Check if token is expired
-        const decoded: any = jwtDecode(token);
-        const currentTime = Date.now() / 1000;
-        
-        if (decoded.exp < currentTime) {
-          dispatch({ type: 'AUTH_ERROR' });
-          return;
-        }
-        
-        const response = await authService.getCurrentUser();
-        dispatch({ type: 'USER_LOADED', payload: response.user });
-      } catch (err) {
-        dispatch({ type: 'AUTH_ERROR' });
-      }
+      setIsLoading(false);
     };
-
-    loadUser();
+    
+    checkAuth();
   }, []);
 
-  // Login user
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      dispatch({ type: 'SET_LOADING' });
-      const response = await authService.login({ email, password });
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: { user: response.user, token: response.token }
-      });
+      if (isDemoMode) {
+        // Demo mode login logic
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            // Check for demo credentials
+            if (email === 'admin@bridgetunes.com' && password === 'admin123') {
+              const demoUser = {
+                id: 'demo-1',
+                username: 'admin',
+                email: 'admin@bridgetunes.com',
+                role: 'admin' as const,
+                name: 'Demo Admin'
+              };
+              
+              // Save to local storage
+              localStorage.setItem(TOKEN_KEY, 'demo-token-123');
+              localStorage.setItem(USER_KEY, JSON.stringify(demoUser));
+              
+              setIsAuthenticated(true);
+              setUser(demoUser);
+              setIsLoading(false);
+              resolve(true);
+            } else {
+              setError('Invalid credentials. In demo mode, use admin@bridgetunes.com / admin123');
+              setIsLoading(false);
+              resolve(false);
+            }
+          }, 800);
+        });
+      } else {
+        // Real API login logic would go here
+        // For now, we'll simulate a successful login with the same credentials
+        // In a real implementation, this would call your backend API
+        
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            // For testing purposes, accept the same demo credentials in non-demo mode too
+            if (email === 'admin@bridgetunes.com' && password === 'admin123') {
+              const apiUser = {
+                id: 'user-1',
+                username: 'admin',
+                email: 'admin@bridgetunes.com',
+                role: 'admin' as const,
+                name: 'Admin User'
+              };
+              
+              // Save to local storage
+              localStorage.setItem(TOKEN_KEY, 'api-token-123');
+              localStorage.setItem(USER_KEY, JSON.stringify(apiUser));
+              
+              setIsAuthenticated(true);
+              setUser(apiUser);
+              setIsLoading(false);
+              resolve(true);
+            } else {
+              setError('Invalid credentials');
+              setIsLoading(false);
+              resolve(false);
+            }
+          }, 1000);
+        });
+      }
     } catch (err) {
-      dispatch({
-        type: 'LOGIN_FAIL',
-        payload: err instanceof Error ? err.message : 'Login failed'
-      });
+      setError('An error occurred during login');
+      setIsLoading(false);
+      return false;
     }
   };
 
-  // Register user
-  const register = async (username: string, email: string, password: string, role: 'admin' | 'manager' | 'viewer') => {
+  const logout = (): void => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    setIsAuthenticated(false);
+    setUser(null);
+    navigate('/login');
+  };
+  
+  const resetPassword = async (email: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      dispatch({ type: 'SET_LOADING' });
-      await authService.register({ username, email, password, role });
-      dispatch({ type: 'REGISTER_SUCCESS' });
-    } catch (err) {
-      dispatch({
-        type: 'REGISTER_FAIL',
-        payload: err instanceof Error ? err.message : 'Registration failed'
+      // In a real implementation, this would call an API
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          // Simulate successful password reset request
+          setIsLoading(false);
+          resolve(true);
+        }, 1000);
       });
+    } catch (err) {
+      setError('An error occurred during password reset');
+      setIsLoading(false);
+      return false;
     }
-  };
-
-  // Logout user
-  const logout = () => {
-    authService.logout();
-    dispatch({ type: 'LOGOUT' });
-  };
-
-  // Clear errors
-  const clearErrors = () => {
-    dispatch({ type: 'CLEAR_ERRORS' });
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        state,
-        login,
-        register,
-        logout,
-        clearErrors
+    <AuthContext.Provider 
+      value={{ 
+        isAuthenticated, 
+        login, 
+        logout, 
+        user, 
+        isLoading, 
+        error,
+        resetPassword
       }}
     >
       {children}
@@ -182,7 +175,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-// Create custom hook for using auth context
-export const useAuth = () => useContext(AuthContext);
-
-export default AuthContext;
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

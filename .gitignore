@@ -1,0 +1,14 @@
+# dependencies & builds
+node_modules
+build
+dist
+.next
+out
+
+# env / secrets
+.env*
+.env.local
+
+# OS noise
+.DS_Store
+Thumbs.db

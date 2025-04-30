@@ -1,13 +1,32 @@
+export interface NotificationType {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface NotificationChannel {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface NotificationStatus {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  recipient: string;
-  channel: 'email' | 'sms' | 'in-app';
-  status: 'pending' | 'sent' | 'failed';
+  type: string;
+  channel: string;
+  status: string;
   createdAt: string;
+  scheduledFor?: string;
   sentAt?: string;
+  recipients: number;
 }
 
 export interface NotificationTemplate {
@@ -15,32 +34,39 @@ export interface NotificationTemplate {
   name: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  channel: 'email' | 'sms' | 'in-app';
+  type: string;
+  channel: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface NotificationCreationParams {
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  recipient: string;
-  channel: 'email' | 'sms' | 'in-app';
+  type: string;
+  channel: string;
+  scheduledFor?: string;
+  segment?: string[];
+  templateId?: string;
 }
 
 export interface NotificationTemplateCreationParams {
   name: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  channel: 'email' | 'sms' | 'in-app';
+  type: string;
+  channel: string;
 }
 
 export interface NotificationStats {
-  totalNotifications: number;
-  pendingNotifications: number;
-  sentNotifications: number;
-  failedNotifications: number;
-  emailNotifications: number;
-  smsNotifications: number;
-  inAppNotifications: number;
+  totalSent: number;
+  totalDelivered: number;
+  totalFailed: number;
+  deliveryRate: number;
+  channelBreakdown: {
+    [key: string]: number;
+  };
+  typeBreakdown: {
+    [key: string]: number;
+  };
 }

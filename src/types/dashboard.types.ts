@@ -1,44 +1,60 @@
 export interface DashboardStats {
   totalUsers: number;
   activeUsers: number;
-  totalDraws: number;
-  pendingDraws: number;
-  completedDraws: number;
-  totalTransactions: number;
+  totalTopups: number;
   totalRevenue: number;
-  commissionEarned: number;
+  totalDraws: number;
+  totalWinners: number;
+  totalPrizes: number;
 }
 
-export interface ChartData {
-  name: string;
-  value: number;
-}
-
-export interface TimeSeriesData {
-  date: string;
-  users?: number;
-  transactions?: number;
-  revenue?: number;
-  commission?: number;
+export interface UserActivity {
+  id: string;
+  msisdn: string;
+  name?: string;
+  topups: number;
+  points: number;
+  lastActive: string;
 }
 
 export interface DrawStats {
-  drawId: string;
+  id: string;
+  name: string;
   date: string;
+  status: string;
   participants: number;
   winners: number;
   totalPrize: number;
 }
 
-export interface UserActivity {
-  userId: string;
-  username: string;
-  lastActive: string;
-  activityCount: number;
+export interface TimeSeriesData {
+  date: string;
+  users?: number;
+  topups?: number;
+  revenue?: number;
+  participants?: number;
+  winners?: number;
+  [key: string]: string | number | undefined;
 }
 
 export interface RevenueByCategory {
   category: string;
   amount: number;
   percentage: number;
+}
+
+export interface SubscriberGrowth {
+  date: string;
+  count: number;
+}
+
+export interface TopUpDistribution {
+  amount: number;
+  count: number;
+  percentage: number;
+}
+
+export interface RevenueTrend {
+  date: string;
+  amount: number;
 }

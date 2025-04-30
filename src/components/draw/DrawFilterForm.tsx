@@ -1,270 +1,276 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { motion } from 'framer-motion';
-import { DrawFilter } from '../../types/draw.types';
+import { FaFilter, FaCalendarAlt, FaCheck } from 'react-icons/fa';
 
 interface DrawFilterFormProps {
-  onSubmit: (filter: DrawFilter) => void;
-  initialValues?: Partial<DrawFilter>;
+  onChange: (criteria: any) => void;
 }
 
-const FormContainer = styled.div`
-  background-color: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-bottom: 1.5rem;
-`;
-
-const FormTitle = styled.h3`
-  font-size: 1.25rem;
-  color: #212529;
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
+const FilterForm = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 const Label = styled.label`
-  display: block;
-  margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #555;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  
-  &:focus {
-    outline: none;
-    border-color: #FFD100;
-    box-shadow: 0 0 0 2px rgba(255, 209, 0, 0.2);
-  }
-`;
-
-const CheckboxGroup = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
 `;
 
-const CheckboxLabel = styled.label`
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+const Select = styled.select`
+  padding: 0.75rem;
+  border: 1px solid ${props => props.theme.colors.gray300};
+  border-radius: 8px;
+  font-size: 0.875rem;
   
-  &:hover {
-    background-color: rgba(255, 209, 0, 0.05);
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.colors.primary};
+    box-shadow: 0 0 0 3px ${props => `${props.theme.colors.primary}33`};
   }
 `;
 
-const Checkbox = styled.input`
-  margin-right: 0.5rem;
-`;
-
-const DigitGroup = styled.div`
+const DigitGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0.5rem;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  margin-top: 0.5rem;
 `;
 
-const DigitButton = styled(motion.button)<{ selected: boolean }>`
+const DigitButton = styled.button<{ selected: boolean; recommended?: boolean }>`
   padding: 0.75rem;
-  border: 1px solid ${props => props.selected ? '#FFD100' : '#ddd'};
-  background-color: ${props => props.selected ? 'rgba(255, 209, 0, 0.1)' : 'white'};
-  border-radius: 4px;
-  font-size: 1rem;
+  border: 1px solid ${props => props.selected 
+    ? props.theme.colors.primary 
+    : props.recommended 
+      ? props.theme.colors.warning
+      : props.theme.colors.gray300};
+  background-color: ${props => props.selected 
+    ? `${props.theme.colors.primary}15` 
+    : props.recommended 
+      ? `${props.theme.colors.warning}15`
+      : 'white'};
+  border-radius: 8px;
+  font-weight: ${props => props.selected || props.recommended ? '600' : '400'};
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  position: relative;
   
   &:hover {
-    background-color: ${props => props.selected ? 'rgba(255, 209, 0, 0.2)' : 'rgba(255, 209, 0, 0.05)'};
+    border-color: ${props => props.theme.colors.primary};
+    background-color: ${props => `${props.theme.colors.primary}10`};
   }
   
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 209, 0, 0.2);
-  }
+  ${props => props.selected && `
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0.25rem;
+      right: 0.25rem;
+      width: 0.75rem;
+      height: 0.75rem;
+      background-color: ${props.theme.colors.primary};
+      border-radius: 50%;
+    }
+  `}
+  
+  ${props => props.recommended && !props.selected && `
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0.25rem;
+      right: 0.25rem;
+      width: 0.75rem;
+      height: 0.75rem;
+      background-color: ${props.theme.colors.warning};
+      border-radius: 50%;
+    }
+  `}
 `;
 
-const ButtonGroup = styled.div`
+const RecommendedNote = styled.div`
+  font-size: 0.75rem;
+  color: ${props => props.theme.colors.warning};
   display: flex;
-  justify-content: space-between;
-  margin-top: 2rem;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
 `;
 
-const Button = styled.button`
-  padding: 0.75rem 1.5rem;
-  background-color: #FFD100;
-  color: #000;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
+const DrawFilterForm: React.FC<DrawFilterFormProps> = ({ onChange }) => {
+  const [dayOfWeek, setDayOfWeek] = useState('');
+  const [selectedDigits, setSelectedDigits] = useState<number[]>([]);
   
-  &:hover {
-    background-color: #E6BC00;
-  }
-  
-  &:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-`;
-
-const SecondaryButton = styled(Button)`
-  background-color: white;
-  border: 1px solid #ddd;
-  
-  &:hover {
-    background-color: #f8f9fa;
-  }
-`;
-
-const DrawFilterForm: React.FC<DrawFilterFormProps> = ({ onSubmit, initialValues }) => {
-  const [days, setDays] = useState<string[]>(initialValues?.days || []);
-  const [endingDigits, setEndingDigits] = useState<number[]>(initialValues?.endingDigits || []);
-  const [minTopUp, setMinTopUp] = useState<number | undefined>(initialValues?.minTopUp);
-  const [maxTopUp, setMaxTopUp] = useState<number | undefined>(initialValues?.maxTopUp);
-  
-  const handleDayToggle = (day: string) => {
-    if (days.includes(day)) {
-      setDays(days.filter(d => d !== day));
-    } else {
-      setDays([...days, day]);
+  // Get recommended digits based on day of week
+  const getRecommendedDigits = (day: string): number[] => {
+    switch (day) {
+      case 'monday':
+        return [0, 1];
+      case 'tuesday':
+        return [2, 3];
+      case 'wednesday':
+        return [4, 5];
+      case 'thursday':
+        return [6, 7];
+      case 'friday':
+        return [8, 9];
+      case 'saturday':
+        return [0, 5];
+      case 'sunday':
+        return [1, 6];
+      default:
+        return [];
     }
   };
   
-  const handleDigitToggle = (digit: number) => {
-    if (endingDigits.includes(digit)) {
-      setEndingDigits(endingDigits.filter(d => d !== digit));
-    } else {
-      setEndingDigits([...endingDigits, digit]);
-    }
-  };
+  const recommendedDigits = getRecommendedDigits(dayOfWeek);
   
-  const handleSelectAllDigits = () => {
-    if (endingDigits.length === 10) {
-      setEndingDigits([]);
-    } else {
-      setEndingDigits([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    }
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({
-      days,
-      endingDigits,
-      minTopUp,
-      maxTopUp
+  const handleDayChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const day = e.target.value;
+    setDayOfWeek(day);
+    
+    // Update filter criteria
+    onChange({
+      dayOfWeek: day,
+      endingDigits: selectedDigits
     });
   };
   
-  const handleReset = () => {
-    setDays([]);
-    setEndingDigits([]);
-    setMinTopUp(undefined);
-    setMaxTopUp(undefined);
+  const handleDigitToggle = (digit: number) => {
+    const newSelectedDigits = selectedDigits.includes(digit)
+      ? selectedDigits.filter(d => d !== digit)
+      : [...selectedDigits, digit];
+    
+    setSelectedDigits(newSelectedDigits);
+    
+    // Update filter criteria
+    onChange({
+      dayOfWeek,
+      endingDigits: newSelectedDigits
+    });
+  };
+  
+  const handleSelectAll = () => {
+    const allDigits = Array.from({ length: 10 }, (_, i) => i);
+    setSelectedDigits(allDigits);
+    
+    // Update filter criteria
+    onChange({
+      dayOfWeek,
+      endingDigits: allDigits
+    });
+  };
+  
+  const handleClearAll = () => {
+    setSelectedDigits([]);
+    
+    // Update filter criteria
+    onChange({
+      dayOfWeek,
+      endingDigits: []
+    });
+  };
+  
+  const handleSelectRecommended = () => {
+    setSelectedDigits(recommendedDigits);
+    
+    // Update filter criteria
+    onChange({
+      dayOfWeek,
+      endingDigits: recommendedDigits
+    });
   };
   
   return (
-    <FormContainer>
-      <FormTitle>Draw Filter Criteria</FormTitle>
-      <form onSubmit={handleSubmit}>
-        <FormGroup>
-          <Label>Days of the Week</Label>
-          <CheckboxGroup>
-            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
-              <CheckboxLabel key={day}>
-                <Checkbox
-                  type="checkbox"
-                  checked={days.includes(day)}
-                  onChange={() => handleDayToggle(day)}
-                />
-                {day}
-              </CheckboxLabel>
-            ))}
-          </CheckboxGroup>
-        </FormGroup>
+    <FilterForm>
+      <FormGroup>
+        <Label><FaCalendarAlt /> Day of Week</Label>
+        <Select value={dayOfWeek} onChange={handleDayChange}>
+          <option value="">All Days</option>
+          <option value="monday">Monday</option>
+          <option value="tuesday">Tuesday</option>
+          <option value="wednesday">Wednesday</option>
+          <option value="thursday">Thursday</option>
+          <option value="friday">Friday</option>
+          <option value="saturday">Saturday</option>
+          <option value="sunday">Sunday</option>
+        </Select>
+      </FormGroup>
+      
+      <FormGroup>
+        <Label><FaFilter /> Ending Digits</Label>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          <button 
+            onClick={handleSelectAll}
+            style={{ 
+              padding: '0.5rem', 
+              fontSize: '0.75rem', 
+              background: 'none',
+              border: `1px solid ${selectedDigits.length === 10 ? '#FFD100' : '#dee2e6'}`,
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Select All
+          </button>
+          <button 
+            onClick={handleClearAll}
+            style={{ 
+              padding: '0.5rem', 
+              fontSize: '0.75rem', 
+              background: 'none',
+              border: '1px solid #dee2e6',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Clear All
+          </button>
+          {dayOfWeek && recommendedDigits.length > 0 && (
+            <button 
+              onClick={handleSelectRecommended}
+              style={{ 
+                padding: '0.5rem', 
+                fontSize: '0.75rem', 
+                background: 'none',
+                border: '1px solid #ffc107',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Recommended
+            </button>
+          )}
+        </div>
         
-        <FormGroup>
-          <Label>Ending Digits</Label>
-          <DigitGroup>
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(digit => (
-              <DigitButton
-                key={digit}
-                type="button"
-                selected={endingDigits.includes(digit)}
-                onClick={() => handleDigitToggle(digit)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {digit}
-              </DigitButton>
-            ))}
-          </DigitGroup>
-          <div style={{ marginTop: '0.5rem', textAlign: 'right' }}>
-            <SecondaryButton type="button" onClick={handleSelectAllDigits}>
-              {endingDigits.length === 10 ? 'Clear All' : 'Select All'}
-            </SecondaryButton>
-          </div>
-        </FormGroup>
+        <DigitGrid>
+          {Array.from({ length: 10 }, (_, i) => (
+            <DigitButton 
+              key={i}
+              selected={selectedDigits.includes(i)}
+              recommended={recommendedDigits.includes(i)}
+              onClick={() => handleDigitToggle(i)}
+            >
+              {i}
+            </DigitButton>
+          ))}
+        </DigitGrid>
         
-        <FormGroup>
-          <Label>Top-up Amount Range (₦)</Label>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <div style={{ flex: 1 }}>
-              <Label>Minimum</Label>
-              <Input
-                type="number"
-                min="0"
-                step="1"
-                value={minTopUp || ''}
-                onChange={(e) => setMinTopUp(e.target.value ? Number(e.target.value) : undefined)}
-                placeholder="Min amount"
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <Label>Maximum</Label>
-              <Input
-                type="number"
-                min="0"
-                step="1"
-                value={maxTopUp || ''}
-                onChange={(e) => setMaxTopUp(e.target.value ? Number(e.target.value) : undefined)}
-                placeholder="Max amount"
-              />
-            </div>
-          </div>
-        </FormGroup>
-        
-        <ButtonGroup>
-          <SecondaryButton type="button" onClick={handleReset}>
-            Reset
-          </SecondaryButton>
-          <Button type="submit">
-            Apply Filter
-          </Button>
-        </ButtonGroup>
-      </form>
-    </FormContainer>
+        {dayOfWeek && recommendedDigits.length > 0 && (
+          <RecommendedNote>
+            <FaCheck style={{ color: '#ffc107' }} />
+            Recommended digits for {dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1)}
+          </RecommendedNote>
+        )}
+      </FormGroup>
+    </FilterForm>
   );
 };
 

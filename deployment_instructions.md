@@ -1,399 +1,214 @@
-# Bridgetunes MTN Admin Portal Deployment Instructions
+# Deployment Instructions for Bridgetunes Admin Portal
 
-This document provides comprehensive instructions for deploying the Bridgetunes MTN Admin Portal, which includes the authentication system with JWT, dashboard with analytics visualization, draw management with animations, user management interface, notification management system, and CSV upload functionality.
+This document provides instructions for deploying the Bridgetunes Admin Portal application.
 
 ## Prerequisites
 
-Before deploying the Bridgetunes MTN Admin Portal, ensure you have the following:
+- Node.js (v16 or later)
+- npm (v7 or later)
+- Docker (optional, for containerized deployment)
 
-- A server with at least 2GB RAM and 1 CPU core
-- Ubuntu 20.04 LTS or newer
-- Node.js 16.x or newer
-- MongoDB 4.4 or newer
-- Nginx web server
-- SSL certificate for your domain
-- Access to your domain's DNS settings for CNAME configuration
+## Important Notes About This Fixed Version
 
-## Environment Setup
+This version includes several fixes to address TypeScript errors and build issues:
 
-### 1. Update Server and Install Dependencies
+1. **Import Path Fixes**: Removed file extensions (.tsx and .ts) from import paths
+2. **Node.js Compatibility**: Added polyfills for Node.js crypto module compatibility
+3. **TypeScript Configuration**: Added proper tsconfig.json configuration
+4. **React Hook Rules**: Fixed React Hook rules violations
+5. **Type Definitions**: Added missing TypeScript interfaces and type definitions
+6. **Component Props**: Updated component interfaces and made props optional where needed
 
-```bash
-# Update package lists
-sudo apt update
+## Local Development Deployment
 
-# Upgrade installed packages
-sudo apt upgrade -y
-
-# Install Node.js and npm
-curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# Install MongoDB
-wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
-sudo apt update
-sudo apt install -y mongodb-org
-sudo systemctl start mongod
-sudo systemctl enable mongod
-
-# Install Nginx
-sudo apt install -y nginx
-sudo systemctl start nginx
-sudo systemctl enable nginx
-
-# Install PM2 for process management
-sudo npm install -g pm2
-```
-
-### 2. Configure Environment Variables
-
-Create a `.env` file in the root directory of both the frontend and backend applications:
-
-#### Backend `.env` file:
-
-```
-NODE_ENV=production
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/bridgetunes
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRE=30d
-EMAIL_SERVICE=your_email_service
-EMAIL_USERNAME=your_email_username
-EMAIL_PASSWORD=your_email_password
-EMAIL_FROM=your_email_address
-```
-
-#### Frontend `.env` file:
-
-```
-REACT_APP_API_URL=https://api.yourdomain.com
-```
-
-Replace placeholders with your actual values.
-
-## Backend Deployment
-
-### 1. Clone the Repository
+### 1. Extract the Package
 
 ```bash
-git clone https://github.com/your-organization/bridgetunes-admin-backend.git
-cd bridgetunes-admin-backend
+tar -xzvf bridgetunes-fixed-package.tar.gz
+cd bridgetunes-admin-portal
 ```
 
-### 2. Install Dependencies and Build
+### 2. Install Dependencies
 
 ```bash
 npm install
+```
+
+### 3. Configure Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+REACT_APP_API_URL=http://localhost:8000/api
+REACT_APP_AUTH_TOKEN_KEY=bridgetunes_auth_token
+REACT_APP_DEMO_MODE_KEY=bridgetunes_demo_mode
+```
+
+For production, update the `REACT_APP_API_URL` to point to your production API endpoint.
+
+### 4. Start the Development Server
+
+```bash
+npm start
+```
+
+The application will be available at http://localhost:3000.
+
+## Production Deployment
+
+### Option 1: Static Build Deployment
+
+1. Build the application:
+
+```bash
 npm run build
 ```
 
-### 3. Configure PM2 for Backend
+2. The build output will be in the `build` directory. Deploy these files to your web server.
 
-Create a PM2 ecosystem file:
+3. Configure your web server to serve the static files and handle client-side routing:
 
-```bash
-touch ecosystem.config.js
-```
-
-Add the following content to the file:
-
-```javascript
-module.exports = {
-  apps: [
-    {
-      name: "bridgetunes-backend",
-      script: "dist/server.js",
-      instances: "max",
-      exec_mode: "cluster",
-      autorestart: true,
-      watch: false,
-      max_memory_restart: "1G",
-      env: {
-        NODE_ENV: "production",
-      },
-    },
-  ],
-};
-```
-
-### 4. Start the Backend with PM2
-
-```bash
-pm2 start ecosystem.config.js
-pm2 save
-pm2 startup
-```
-
-## Frontend Deployment
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/your-organization/bridgetunes-admin-frontend.git
-cd bridgetunes-admin-frontend
-```
-
-### 2. Install Dependencies and Build
-
-```bash
-npm install
-npm run build
-```
-
-### 3. Configure Nginx
-
-Create a new Nginx configuration file:
-
-```bash
-sudo nano /etc/nginx/sites-available/bridgetunes-admin
-```
-
-Add the following configuration:
+For Nginx, add the following to your server configuration:
 
 ```nginx
 server {
     listen 80;
-    server_name admin.yourdomain.com;
+    server_name your-domain.com;
+    root /path/to/build;
+    index index.html;
 
     location / {
-        root /path/to/bridgetunes-admin-frontend/build;
-        index index.html index.htm;
         try_files $uri $uri/ /index.html;
-    }
-
-    location /api {
-        proxy_pass http://localhost:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
     }
 }
 ```
 
-Enable the configuration:
+### Option 2: Docker Deployment
+
+1. Build the Docker image:
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/bridgetunes-admin /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
+docker build -t bridgetunes-admin-portal .
 ```
 
-### 4. Set Up SSL with Let's Encrypt
+2. Run the Docker container:
 
 ```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d admin.yourdomain.com
+docker run -p 80:80 bridgetunes-admin-portal
 ```
 
-Follow the prompts to complete the SSL setup.
+The application will be available at http://localhost.
 
-## Database Configuration
-
-### 1. Secure MongoDB
+For production deployment with Docker:
 
 ```bash
-sudo nano /etc/mongod.conf
+docker run -p 80:80 -e REACT_APP_API_URL=https://api.your-domain.com bridgetunes-admin-portal
 ```
 
-Add or modify the following sections:
+## Vercel Deployment
 
-```yaml
-security:
-  authorization: enabled
+To deploy to Vercel:
 
-net:
-  bindIp: 127.0.0.1
+1. Create a `vercel.json` file in the root directory:
+
+```json
+{
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build",
+        "buildCommand": "npm run build"
+      }
+    }
+  ],
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/index.html" }
+  ]
+}
 ```
 
-Restart MongoDB:
+2. Push your code to GitHub
 
-```bash
-sudo systemctl restart mongod
-```
+3. Connect your GitHub repository to Vercel
 
-### 2. Create Admin User
+4. Configure environment variables in the Vercel dashboard
 
-```bash
-mongo
-```
+## Email Configuration with Mailgun
 
-In the MongoDB shell:
+To enable email functionality, you need to configure Mailgun:
 
-```javascript
-use admin
-db.createUser({
-  user: "adminUser",
-  pwd: "securePassword",
-  roles: [{ role: "userAdminAnyDatabase", db: "admin" }]
-})
-exit
-```
+### 1. Mailgun Setup
 
-### 3. Create Database and User for Bridgetunes
+1. Create a Mailgun account at https://www.mailgun.com/
+2. Verify your domain or use the sandbox domain for testing
+3. Get your API key from the Mailgun dashboard
 
-```bash
-mongo -u adminUser -p securePassword --authenticationDatabase admin
-```
+### 2. Configure Environment Variables for Email
 
-In the MongoDB shell:
-
-```javascript
-use bridgetunes
-db.createUser({
-  user: "bridgetunesUser",
-  pwd: "bridgetunesPassword",
-  roles: [{ role: "readWrite", db: "bridgetunes" }]
-})
-exit
-```
-
-Update the `.env` file with the new MongoDB URI:
+Add the following to your `.env` file:
 
 ```
-MONGO_URI=mongodb://bridgetunesUser:bridgetunesPassword@localhost:27017/bridgetunes
+REACT_APP_MAILGUN_API_KEY=your-mailgun-api-key
+REACT_APP_MAILGUN_DOMAIN=your-mailgun-domain
+REACT_APP_SENDER_EMAIL=noreply@your-domain.com
 ```
 
-## CNAME Configuration
+## Admin User Setup
 
-To set up a custom domain with CNAME records:
+The first super admin user must be created manually. After deployment:
 
-1. Log in to your domain registrar's DNS management panel
-2. Create a new CNAME record:
-   - Name/Host: `admin` (for admin.yourdomain.com)
-   - Value/Target: Your server's hostname or IP address
-   - TTL: 3600 (or as recommended by your registrar)
+1. Access the application and log in with the default credentials:
+   - Email: admin@bridgetunes.com
+   - Password: admin123
 
-## Post-Deployment Verification
+2. Immediately change the default password through the user profile page
 
-### 1. Test the Backend API
+3. Use the super admin account to create additional admin users with appropriate permissions
 
-```bash
-curl -X GET https://admin.yourdomain.com/api/health
-```
+## Switching Between Demo and Production Modes
 
-Expected response: `{"status":"success","message":"API is running"}`
+The application includes a toggle for switching between demo mode and production mode:
 
-### 2. Test the Frontend
+- **Demo Mode**: Uses local storage for data and doesn't require backend API connectivity
+- **Production Mode**: Connects to the backend API for all data operations
 
-Open a web browser and navigate to `https://admin.yourdomain.com`. You should see the login page of the Bridgetunes MTN Admin Portal.
-
-### 3. Monitor Logs
-
-```bash
-# Backend logs
-pm2 logs bridgetunes-backend
-
-# Nginx logs
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
-
-# MongoDB logs
-sudo tail -f /var/log/mongodb/mongod.log
-```
-
-## Maintenance Procedures
-
-### Updating the Application
-
-#### Backend Update:
-
-```bash
-cd /path/to/bridgetunes-admin-backend
-git pull
-npm install
-npm run build
-pm2 restart bridgetunes-backend
-```
-
-#### Frontend Update:
-
-```bash
-cd /path/to/bridgetunes-admin-frontend
-git pull
-npm install
-npm run build
-```
-
-### Database Backup
-
-Set up a daily backup cron job:
-
-```bash
-sudo nano /etc/cron.daily/mongodb-backup
-```
-
-Add the following content:
-
-```bash
-#!/bin/bash
-TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-BACKUP_DIR="/var/backups/mongodb"
-mkdir -p $BACKUP_DIR
-mongodump --uri="mongodb://bridgetunesUser:bridgetunesPassword@localhost:27017/bridgetunes" --out="$BACKUP_DIR/bridgetunes-$TIMESTAMP"
-find $BACKUP_DIR -type d -mtime +7 -exec rm -rf {} \;
-```
-
-Make the script executable:
-
-```bash
-sudo chmod +x /etc/cron.daily/mongodb-backup
-```
+The toggle is available in the application header for admin users.
 
 ## Troubleshooting
 
 ### Common Issues and Solutions
 
-1. **Backend service not starting:**
-   - Check logs: `pm2 logs bridgetunes-backend`
-   - Verify environment variables: `cat .env`
-   - Check MongoDB connection: `mongo mongodb://bridgetunesUser:bridgetunesPassword@localhost:27017/bridgetunes`
+1. **TypeScript Errors During Build**:
+   - If you encounter TypeScript errors, make sure you're using the correct version of TypeScript (4.4.x or later)
+   - Run `npm install --save-dev typescript@4.4.4` to install a compatible version
 
-2. **Frontend not loading:**
-   - Check Nginx configuration: `sudo nginx -t`
-   - Verify build files: `ls -la /path/to/bridgetunes-admin-frontend/build`
-   - Check Nginx logs: `sudo tail -f /var/log/nginx/error.log`
+2. **Node.js Crypto Module Errors**:
+   - This fixed version includes polyfills for the Node.js crypto module
+   - If you still encounter crypto-related errors, make sure you're using Node.js v16 or later
 
-3. **Database connection issues:**
-   - Check MongoDB status: `sudo systemctl status mongod`
-   - Verify network configuration: `cat /etc/mongod.conf`
-   - Test connection: `mongo --host localhost --port 27017`
+3. **React Hook Errors**:
+   - If you encounter React Hook errors, make sure you're not calling hooks inside callbacks or conditions
+   - Review the React Hook Rules: https://reactjs.org/docs/hooks-rules.html
 
-4. **SSL certificate issues:**
-   - Renew certificate: `sudo certbot renew`
-   - Check certificate status: `sudo certbot certificates`
+4. **Build Fails with ESLint Warnings**:
+   - You can add `ESLINT_NO_DEV_ERRORS=true` to your .env file to prevent ESLint warnings from failing the build
 
-## Security Considerations
+If you encounter issues during deployment:
 
-1. **Firewall Configuration:**
-   ```bash
-   sudo ufw allow ssh
-   sudo ufw allow 'Nginx Full'
-   sudo ufw enable
-   ```
+1. Check that all environment variables are correctly set
+2. Ensure the backend API is accessible from the deployment environment
+3. Verify that the web server is configured to handle client-side routing
+4. Check browser console for any JavaScript errors
 
-2. **Regular Updates:**
-   ```bash
-   sudo apt update
-   sudo apt upgrade -y
-   ```
+For Docker deployments, you can check the logs with:
 
-3. **Fail2Ban Installation:**
-   ```bash
-   sudo apt install -y fail2ban
-   sudo systemctl enable fail2ban
-   sudo systemctl start fail2ban
-   ```
+```bash
+docker logs <container-id>
+```
 
-## Contact and Support
+## Support
 
-For any deployment issues or questions, please contact:
-- Technical Support: support@bridgetunes.com
-- System Administrator: sysadmin@bridgetunes.com
-
----
-
-This deployment guide was prepared for Bridgetunes MTN Admin Portal deployment.
-Last updated: April 27, 2025
+For additional support, please contact the development team.

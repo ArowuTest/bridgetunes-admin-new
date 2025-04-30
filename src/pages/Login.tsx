@@ -1,169 +1,287 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled, { keyframes } from 'styled-components';
+import { FaUser, FaLock, FaSpinner } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useDemoMode } from '../context/DemoModeContext';
+import Card from '../components/Card';
+import Button from '../components/Button';
 
-const LoginContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-color: #f5f5f5;
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 `;
 
-const LoginForm = styled.form`
-  display: flex;
-  flex-direction: column;
+const LoginContainer = styled.div`
   width: 100%;
-  max-width: 400px;
-  padding: 2rem;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 450px;
+  animation: ${fadeIn} 0.5s ease-out;
 `;
 
 const Logo = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 2rem;
-  text-align: center;
-  
-  img {
-    height: 60px;
+`;
+
+const MTNLogo = styled.div`
+  width: 60px;
+  height: 60px;
+  background-color: ${props => props.theme.colors.primary};
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  font-weight: 900;
+  color: black;
+  font-size: 1.2rem;
+`;
+
+const LogoText = styled.div`
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: ${props => props.theme.colors.dark};
+  span {
+    color: ${props => props.theme.colors.primary};
   }
 `;
 
-const Title = styled.h1`
-  font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 1.5rem;
-  text-align: center;
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 1rem;
+  position: relative;
 `;
 
-const Label = styled.label`
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #555;
-`;
-
-const Input = styled.input`
+const Input = styled.input<{ hasError?: boolean }>`
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 1rem 1rem 1rem 3rem;
+  border: 1px solid ${props => props.hasError ? props.theme.colors.danger : props.theme.colors.gray300};
+  border-radius: 8px;
   font-size: 1rem;
+  transition: all 0.3s ease;
   
   &:focus {
     outline: none;
-    border-color: #FFD100;
-    box-shadow: 0 0 0 2px rgba(255, 209, 0, 0.2);
+    border-color: ${props => props.hasError ? props.theme.colors.danger : props.theme.colors.primary};
+    box-shadow: 0 0 0 3px ${props => props.hasError 
+      ? `${props.theme.colors.danger}33` 
+      : `${props.theme.colors.primary}33`};
   }
 `;
 
-const Button = styled.button`
-  padding: 0.75rem;
-  background-color: #FFD100;
-  color: #000;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 1rem;
-  transition: background-color 0.2s;
-  
-  &:hover {
-    background-color: #E6BC00;
-  }
-  
-  &:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
+const InputIcon = styled.div`
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: ${props => props.theme.colors.gray600};
 `;
 
 const ErrorMessage = styled.div`
-  color: #e74c3c;
-  margin-top: 1rem;
-  text-align: center;
+  color: ${props => props.theme.colors.danger};
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
 `;
 
 const ForgotPassword = styled.div`
-  margin-top: 1rem;
   text-align: center;
+  margin-top: 1rem;
   
   a {
-    color: #3498db;
+    color: ${props => props.theme.colors.primary};
     text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
     
     &:hover {
+      color: ${props => props.theme.colors.secondary};
       text-decoration: underline;
     }
   }
 `;
 
+const DemoModeInfo = styled.div`
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: ${props => `${props.theme.colors.info}15`};
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: ${props => props.theme.colors.info};
+  text-align: center;
+`;
+
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, state } = useAuth();
+  const [errors, setErrors] = useState<{email?: string; password?: string; general?: string}>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const { isDemoMode } = useDemoMode();
   const navigate = useNavigate();
-  
+
+  useEffect(() => {
+    // Clear errors when inputs change
+    if (email) {
+      setErrors(prev => ({...prev, email: undefined}));
+    }
+    if (password) {
+      setErrors(prev => ({...prev, password: undefined}));
+    }
+  }, [email, password]);
+
+  const validateForm = (): boolean => {
+    const newErrors: {email?: string; password?: string} = {};
+    
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password);
-  };
-  
-  // Redirect if authenticated
-  React.useEffect(() => {
-    if (state.isAuthenticated) {
-      navigate('/dashboard');
+    
+    if (!validateForm()) {
+      return;
     }
-  }, [state.isAuthenticated, navigate]);
-  
+    
+    setIsLoading(true);
+    
+    try {
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (error) {
+      setErrors({
+        general: 'Invalid email or password'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setIsLoading(true);
+    
+    try {
+      await login('demo@example.com', 'password');
+      navigate('/dashboard');
+    } catch (error) {
+      setErrors({
+        general: 'Demo login failed'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <LoginContainer>
-      <LoginForm onSubmit={handleSubmit}>
+      <Card padding="2rem">
         <Logo>
-          <img src="/logo.png" alt="Bridgetunes MTN Logo" />
+          <MTNLogo>MTN</MTNLogo>
+          <LogoText>
+            Bridgetunes <span>Admin</span>
+          </LogoText>
         </Logo>
-        <Title>Admin Portal Login</Title>
         
-        <FormGroup>
-          <Label htmlFor="email">Email</Label>
-          <Input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </FormGroup>
+        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Sign in to your account</h2>
         
-        <FormGroup>
-          <Label htmlFor="password">Password</Label>
-          <Input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </FormGroup>
+        {errors.general && (
+          <ErrorMessage style={{ textAlign: 'center', marginBottom: '1rem' }}>
+            {errors.general}
+          </ErrorMessage>
+        )}
         
-        {state.error && <ErrorMessage>{state.error}</ErrorMessage>}
-        
-        <Button type="submit" disabled={state.loading}>
-          {state.loading ? 'Logging in...' : 'Login'}
-        </Button>
+        <Form onSubmit={handleSubmit}>
+          <FormGroup>
+            <InputIcon>
+              <FaUser />
+            </InputIcon>
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              hasError={!!errors.email}
+            />
+            {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
+          </FormGroup>
+          
+          <FormGroup>
+            <InputIcon>
+              <FaLock />
+            </InputIcon>
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              hasError={!!errors.password}
+            />
+            {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
+          </FormGroup>
+          
+          <Button 
+            type="submit" 
+            fullWidth 
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> 
+                Signing in...
+              </>
+            ) : (
+              'Sign In'
+            )}
+          </Button>
+          
+          {isDemoMode && (
+            <Button 
+              type="button" 
+              variant="secondary" 
+              fullWidth 
+              onClick={handleDemoLogin}
+              disabled={isLoading}
+            >
+              Use Demo Account
+            </Button>
+          )}
+        </Form>
         
         <ForgotPassword>
-          <Link to="/forgot-password">Forgot password?</Link>
+          <a href="#forgot-password">Forgot password?</a>
         </ForgotPassword>
-      </LoginForm>
+        
+        {isDemoMode && (
+          <DemoModeInfo>
+            <strong>Demo Mode Active</strong>
+            <p>Data is stored locally and not sent to any server.</p>
+          </DemoModeInfo>
+        )}
+      </Card>
     </LoginContainer>
   );
 };

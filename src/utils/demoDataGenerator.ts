@@ -74,8 +74,8 @@ export const generateDemoData = (): DemoDataType => {
     }
   }
   
-  // Generate admin users
-  const users = [
+  // Generate admin users with proper role types
+  const users: User[] = [
     {
       id: 'user_1',
       username: 'admin',
@@ -85,7 +85,7 @@ export const generateDemoData = (): DemoDataType => {
       lastLogin: new Date().toISOString(),
       createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
       updatedAt: new Date().toISOString()
-    },
+    } as User,
     {
       id: 'user_2',
       username: 'manager',
@@ -95,7 +95,7 @@ export const generateDemoData = (): DemoDataType => {
       lastLogin: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
       updatedAt: new Date().toISOString()
-    },
+    } as User,
     {
       id: 'user_3',
       username: 'viewer',
@@ -105,7 +105,7 @@ export const generateDemoData = (): DemoDataType => {
       lastLogin: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
       updatedAt: new Date().toISOString()
-    }
+    } as User
   ];
   
   // Generate draws
@@ -113,93 +113,65 @@ export const generateDemoData = (): DemoDataType => {
     {
       id: 'draw_1',
       name: 'Weekly Draw - Week 1',
-      description: 'First weekly draw for MyNumba Don Win promotion',
-      drawDate: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+      date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'completed',
-      totalParticipants: 85,
-      totalWinners: 5,
-      totalPrizeAmount: 50000,
-      filters: {
-        endingDigits: ['0', '1'],
-        minTopUpAmount: 200,
-        maxTopUpAmount: null,
-        startDate: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-        endDate: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000).toISOString(),
-        optInStatus: true
-      },
-      createdAt: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString()
+      participantCount: 85,
+      winnerCount: 5,
+      totalPrize: 50000,
+      filterCriteria: {
+        days: ['Monday'],
+        endingDigits: [0, 1]
+      }
     },
     {
       id: 'draw_2',
       name: 'Weekly Draw - Week 2',
-      description: 'Second weekly draw for MyNumba Don Win promotion',
-      drawDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'completed',
-      totalParticipants: 92,
-      totalWinners: 5,
-      totalPrizeAmount: 50000,
-      filters: {
-        endingDigits: ['2', '3'],
-        minTopUpAmount: 200,
-        maxTopUpAmount: null,
-        startDate: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-        endDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-        optInStatus: true
-      },
-      createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+      participantCount: 92,
+      winnerCount: 5,
+      totalPrize: 50000,
+      filterCriteria: {
+        days: ['Tuesday'],
+        endingDigits: [2, 3]
+      }
     },
     {
       id: 'draw_3',
       name: 'Weekly Draw - Week 3',
-      description: 'Third weekly draw for MyNumba Don Win promotion',
-      drawDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'completed',
-      totalParticipants: 103,
-      totalWinners: 5,
-      totalPrizeAmount: 50000,
-      filters: {
-        endingDigits: ['4', '5'],
-        minTopUpAmount: 200,
-        maxTopUpAmount: null,
-        startDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-        endDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-        optInStatus: true
-      },
-      createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      participantCount: 103,
+      winnerCount: 5,
+      totalPrize: 50000,
+      filterCriteria: {
+        days: ['Wednesday'],
+        endingDigits: [4, 5]
+      }
     },
     {
       id: 'draw_4',
       name: 'Weekly Draw - Week 4',
-      description: 'Fourth weekly draw for MyNumba Don Win promotion',
-      drawDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+      date: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'scheduled',
-      totalParticipants: 0,
-      totalWinners: 0,
-      totalPrizeAmount: 50000,
-      filters: {
-        endingDigits: ['6', '7'],
-        minTopUpAmount: 200,
-        maxTopUpAmount: null,
-        startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        endDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        optInStatus: true
-      },
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      participantCount: 0,
+      winnerCount: 0,
+      totalPrize: 50000,
+      filterCriteria: {
+        days: ['Thursday'],
+        endingDigits: [6, 7]
+      }
     }
   ];
   
   // Generate winners for completed draws
-  const winners = [];
+  const winners: Winner[] = [];
   const completedDraws = draws.filter(draw => draw.status === 'completed');
   
   for (let i = 0; i < completedDraws.length; i++) {
     const draw = completedDraws[i];
     
-    for (let j = 0; j < draw.totalWinners; j++) {
+    for (let j = 0; j < draw.winnerCount; j++) {
       // Pick a random subscriber
       const subscriber = subscribers[Math.floor(Math.random() * subscribers.length)];
       
@@ -207,12 +179,12 @@ export const generateDemoData = (): DemoDataType => {
         id: `winner_${winners.length + 1}`,
         drawId: draw.id,
         msisdn: subscriber.msisdn,
-        prizeAmount: draw.totalPrizeAmount / draw.totalWinners,
+        prizeAmount: draw.totalPrize / draw.winnerCount,
         status: Math.random() > 0.2 ? 'paid' : 'pending', // 80% paid, 20% pending
-        paymentDate: Math.random() > 0.2 ? new Date(new Date(draw.drawDate).getTime() + 2 * 24 * 60 * 60 * 1000).toISOString() : null,
+        paymentDate: Math.random() > 0.2 ? new Date(new Date(draw.date).getTime() + 2 * 24 * 60 * 60 * 1000).toISOString() : null,
         paymentReference: Math.random() > 0.2 ? `PAY${Math.floor(1000000000 + Math.random() * 9000000000)}` : null,
-        createdAt: draw.drawDate,
-        updatedAt: draw.drawDate
+        createdAt: draw.date,
+        updatedAt: draw.date
       });
     }
   }
@@ -248,61 +220,11 @@ export const generateDemoData = (): DemoDataType => {
       channel: 'sms',
       createdAt: new Date(Date.now() - 80 * 24 * 60 * 60 * 1000).toISOString(),
       updatedAt: new Date(Date.now() - 80 * 24 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: 'template_4',
-      name: 'Recharge Confirmation',
-      title: 'Recharge Confirmation',
-      message: 'Dear customer, your recharge of ₦{{amount}} has been received. You are now eligible for the next MyNumba Don Win draw!',
-      type: 'info',
-      channel: 'sms',
-      createdAt: new Date(Date.now() - 75 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 75 * 24 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: 'template_5',
-      name: 'Opt-Out Confirmation',
-      title: 'Opt-Out Confirmation',
-      message: 'You have successfully opted out of the MyNumba Don Win promotion. You will no longer receive messages or participate in draws. Text JOIN to opt back in.',
-      type: 'info',
-      channel: 'sms',
-      createdAt: new Date(Date.now() - 70 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 70 * 24 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: 'template_6',
-      name: 'Draw Results',
-      title: 'Draw Results',
-      message: 'The results of the latest MyNumba Don Win draw are now available! Visit our website to see if you won. The next draw will be on {{nextDrawDate}}.',
-      type: 'info',
-      channel: 'sms',
-      createdAt: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: 'template_7',
-      name: 'Special Promotion',
-      title: 'Special Promotion',
-      message: 'Dear customer, recharge with ₦500 or more today and get DOUBLE chances to win in the next MyNumba Don Win draw! Offer valid for 24 hours only.',
-      type: 'info',
-      channel: 'sms',
-      createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: 'template_8',
-      name: 'Payment Confirmation',
-      title: 'Prize Payment Confirmation',
-      message: 'Dear winner, your prize of ₦{{amount}} from the MyNumba Don Win promotion has been credited to your account. Thank you for participating!',
-      type: 'success',
-      channel: 'sms',
-      createdAt: new Date(Date.now() - 55 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 55 * 24 * 60 * 60 * 1000).toISOString()
     }
   ];
   
-  // Generate notifications
-  const notifications = [];
+  // Generate notifications with proper structure matching the Notification interface
+  const notifications: Notification[] = [];
   
   // Welcome notifications for some subscribers
   for (let i = 0; i < 50; i++) {
@@ -313,123 +235,68 @@ export const generateDemoData = (): DemoDataType => {
       title: notificationTemplates[0].title,
       message: notificationTemplates[0].message,
       type: notificationTemplates[0].type,
-      recipient: subscriber.msisdn,
       channel: notificationTemplates[0].channel,
       status: 'sent',
       createdAt: new Date(Date.now() - (90 - i) * 24 * 60 * 60 * 1000).toISOString(),
-      sentAt: new Date(Date.now() - (90 - i) * 24 * 60 * 60 * 1000).toISOString()
+      scheduledFor: undefined,
+      sentAt: new Date(Date.now() - (90 - i) * 24 * 60 * 60 * 1000).toISOString(),
+      recipients: 1
     });
   }
   
-  // Draw reminder notifications
-  for (let i = 0; i < draws.length; i++) {
-    const draw = draws[i];
-    const drawDate = new Date(draw.drawDate);
-    const reminderDate = new Date(drawDate.getTime() - 24 * 60 * 60 * 1000);
-    
-    // Send to 30 random subscribers
-    for (let j = 0; j < 30; j++) {
-      const subscriber = subscribers[Math.floor(Math.random() * subscribers.length)];
-      
-      notifications.push({
-        id: `notification_${notifications.length + 1}`,
-        title: notificationTemplates[1].title,
-        message: notificationTemplates[1].message,
-        type: notificationTemplates[1].type,
-        recipient: subscriber.msisdn,
-        channel: notificationTemplates[1].channel,
-        status: 'sent',
-        createdAt: reminderDate.toISOString(),
-        sentAt: reminderDate.toISOString()
-      });
-    }
-  }
-  
-  // Winner notifications
-  for (let i = 0; i < winners.length; i++) {
-    const winner = winners[i];
-    const draw = draws.find(d => d.id === winner.drawId);
-    
-    if (draw) {
-      const winnerNotificationDate = new Date(draw.drawDate);
-      
-      notifications.push({
-        id: `notification_${notifications.length + 1}`,
-        title: notificationTemplates[2].title,
-        message: notificationTemplates[2].message
-          .replace('{{msisdn}}', winner.msisdn)
-          .replace('{{amount}}', winner.prizeAmount.toString()),
-        type: notificationTemplates[2].type,
-        recipient: winner.msisdn,
-        channel: notificationTemplates[2].channel,
-        status: 'sent',
-        createdAt: winnerNotificationDate.toISOString(),
-        sentAt: winnerNotificationDate.toISOString()
-      });
-    }
-  }
-  
-  // Generate CSV upload history
-  const csvUploads = [
+  // Generate CSV upload history with proper status types
+  const csvUploads: CSVUploadHistory[] = [
     {
       id: 'csv_1',
-      fileName: 'subscriber_data_week1.csv',
-      uploadedBy: 'admin@bridgetunes.com',
-      uploadDate: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-      totalRecords: 500,
-      processedRecords: 495,
-      failedRecords: 5,
-      status: 'completed'
+      filename: 'subscriber_data_week1.csv',
+      uploadedAt: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'completed',
+      recordCount: 500,
+      totalAmount: 250000
     },
     {
       id: 'csv_2',
-      fileName: 'subscriber_data_week2.csv',
-      uploadedBy: 'admin@bridgetunes.com',
-      uploadDate: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-      totalRecords: 750,
-      processedRecords: 742,
-      failedRecords: 8,
-      status: 'completed'
+      filename: 'subscriber_data_week2.csv',
+      uploadedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'completed',
+      recordCount: 750,
+      totalAmount: 375000
     },
     {
       id: 'csv_3',
-      fileName: 'subscriber_data_week3.csv',
-      uploadedBy: 'manager@bridgetunes.com',
-      uploadDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-      totalRecords: 620,
-      processedRecords: 620,
-      failedRecords: 0,
-      status: 'completed'
+      filename: 'subscriber_data_week3.csv',
+      uploadedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'completed',
+      recordCount: 620,
+      totalAmount: 310000
     },
     {
       id: 'csv_4',
-      fileName: 'subscriber_data_week4.csv',
-      uploadedBy: 'admin@bridgetunes.com',
-      uploadDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      totalRecords: 580,
-      processedRecords: 575,
-      failedRecords: 5,
-      status: 'completed'
+      filename: 'subscriber_data_week4.csv',
+      uploadedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'completed',
+      recordCount: 580,
+      totalAmount: 290000
     }
   ];
   
   // Generate dashboard stats
   const dashboardStats = {
-    totalSubscribers: subscribers.length,
-    activeSubscribers: subscribers.filter(s => s.optInStatus).length,
-    totalTopUps: topUps.length,
-    totalTopUpAmount: topUps.reduce((sum, topUp) => sum + topUp.amount, 0),
+    totalUsers: subscribers.length,
+    activeUsers: subscribers.filter(s => s.optInStatus).length,
+    totalTopups: topUps.length,
+    totalRevenue: topUps.reduce((sum, topUp) => sum + topUp.amount, 0),
     totalDraws: draws.length,
     totalWinners: winners.length,
-    totalPrizeAmount: draws.reduce((sum, draw) => sum + draw.totalPrizeAmount, 0)
+    totalPrizes: draws.reduce((sum, draw) => sum + draw.totalPrize, 0)
   };
   
   // Generate subscriber growth data
-  const subscriberGrowth = [];
+  const subscriberGrowth: SubscriberGrowth[] = [];
   const startDate = new Date();
-  startDate.setDate(startDate.getDate() - 90);
+  startDate.setDate(startDate.getDate() - 30);
   
-  for (let i = 0; i < 90; i++) {
+  for (let i = 0; i < 30; i++) {
     const date = new Date(startDate);
     date.setDate(date.getDate() + i);
     
@@ -443,16 +310,24 @@ export const generateDemoData = (): DemoDataType => {
   }
   
   // Generate top-up distribution data
-  const topUpDistribution = [
-    { amount: 100, count: topUps.filter(t => t.amount === 100).length },
-    { amount: 200, count: topUps.filter(t => t.amount === 200).length },
-    { amount: 500, count: topUps.filter(t => t.amount === 500).length },
-    { amount: 1000, count: topUps.filter(t => t.amount === 1000).length },
-    { amount: 2000, count: topUps.filter(t => t.amount === 2000).length }
-  ];
+  const topUpDistribution: TopUpDistribution[] = [];
+  const amounts = [100, 200, 500, 1000, 2000];
+  const totalTopUps = topUps.length;
+  
+  for (let i = 0; i < amounts.length; i++) {
+    const amount = amounts[i];
+    const count = topUps.filter(t => t.amount === amount).length;
+    const percentage = (count / totalTopUps) * 100;
+    
+    topUpDistribution.push({
+      amount,
+      count,
+      percentage
+    });
+  }
   
   // Generate revenue trend data
-  const revenueTrend = [];
+  const revenueTrend: RevenueTrend[] = [];
   const revenueStartDate = new Date();
   revenueStartDate.setDate(revenueStartDate.getDate() - 30);
   
@@ -460,13 +335,11 @@ export const generateDemoData = (): DemoDataType => {
     const date = new Date(revenueStartDate);
     date.setDate(date.getDate() + i);
     
-    // Calculate revenue for this date
-    const dateStr = date.toISOString().split('T')[0];
-    const dayTopUps = topUps.filter(t => t.date.split('T')[0] === dateStr);
-    const amount = dayTopUps.reduce((sum, topUp) => sum + topUp.amount, 0);
+    // Simulate revenue pattern
+    const amount = Math.floor(10000 + Math.random() * 20000);
     
     revenueTrend.push({
-      date: dateStr,
+      date: date.toISOString().split('T')[0],
       amount
     });
   }
@@ -486,3 +359,5 @@ export const generateDemoData = (): DemoDataType => {
     revenueTrend
   };
 };
+
+export default generateDemoData;

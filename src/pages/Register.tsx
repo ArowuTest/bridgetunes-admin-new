@@ -1,47 +1,47 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
-import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
 
 const RegisterContainer = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   min-height: 100vh;
-  padding: 2rem 0;
+  padding: 2rem;
   background-color: #f5f5f5;
+`;
+
+const RegisterCard = styled.div`
+  width: 100%;
+  max-width: 400px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+`;
+
+const RegisterHeader = styled.div`
+  text-align: center;
+  margin-bottom: 2rem;
+`;
+
+const RegisterTitle = styled.h1`
+  font-size: 1.75rem;
+  color: #212529;
+  margin-bottom: 0.5rem;
+`;
+
+const RegisterSubtitle = styled.p`
+  color: #6c757d;
+  font-size: 0.875rem;
 `;
 
 const RegisterForm = styled.form`
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 500px;
-  padding: 2rem;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-`;
-
-const Logo = styled.div`
-  margin-bottom: 2rem;
-  text-align: center;
-  
-  img {
-    height: 60px;
-  }
-`;
-
-const Title = styled.h1`
-  font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 1.5rem;
-  text-align: center;
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 `;
 
 const Label = styled.label`
@@ -65,23 +65,8 @@ const Input = styled.input`
   }
 `;
 
-const Select = styled.select`
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  background-color: white;
-  
-  &:focus {
-    outline: none;
-    border-color: #FFD100;
-    box-shadow: 0 0 0 2px rgba(255, 209, 0, 0.2);
-  }
-`;
-
 const Button = styled.button`
-  padding: 0.75rem;
+  padding: 0.75rem 1.5rem;
   background-color: #FFD100;
   color: #000;
   border: none;
@@ -90,7 +75,6 @@ const Button = styled.button`
   font-weight: 600;
   cursor: pointer;
   margin-top: 1rem;
-  transition: background-color 0.2s;
   
   &:hover {
     background-color: #E6BC00;
@@ -102,140 +86,95 @@ const Button = styled.button`
   }
 `;
 
-const ErrorMessage = styled.div`
-  color: #e74c3c;
-  margin-top: 1rem;
-  text-align: center;
-`;
-
-const LoginLink = styled.div`
-  margin-top: 1rem;
-  text-align: center;
-  
-  a {
-    color: #3498db;
-    text-decoration: none;
-    
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-`;
-
 const Register: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'admin' | 'manager' | 'viewer'>('viewer');
-  const [passwordError, setPasswordError] = useState('');
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [username, setUsername] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
   
-  const { register, state } = useAuth();
-  const navigate = useNavigate();
-  
-  const validatePassword = () => {
-    if (password !== confirmPassword) {
-      setPasswordError('Passwords do not match');
-      return false;
-    }
-    
-    if (password.length < 8) {
-      setPasswordError('Password must be at least 8 characters long');
-      return false;
-    }
-    
-    setPasswordError('');
-    return true;
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    if (!validatePassword()) {
-      return;
-    }
-    
-    await register(username, email, password, role);
-    navigate('/login');
+    // Simulate registration
+    setTimeout(() => {
+      setIsLoading(false);
+      // Redirect to login
+      window.location.href = '/login';
+    }, 1500);
   };
   
   return (
     <RegisterContainer>
-      <RegisterForm onSubmit={handleSubmit}>
-        <Logo>
-          <img src="/logo.png" alt="Bridgetunes MTN Logo" />
-        </Logo>
-        <Title>Create Admin Account</Title>
+      <RegisterCard>
+        <RegisterHeader>
+          <RegisterTitle>Create Account</RegisterTitle>
+          <RegisterSubtitle>Register for Bridgetunes Admin</RegisterSubtitle>
+        </RegisterHeader>
         
-        <FormGroup>
-          <Label htmlFor="username">Username</Label>
-          <Input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </FormGroup>
-        
-        <FormGroup>
-          <Label htmlFor="email">Email</Label>
-          <Input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </FormGroup>
-        
-        <FormGroup>
-          <Label htmlFor="role">Role</Label>
-          <Select
-            id="role"
-            value={role}
-            onChange={(e) => setRole(e.target.value as 'admin' | 'manager' | 'viewer')}
-            required
-          >
-            <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
-            <option value="viewer">Viewer</option>
-          </Select>
-        </FormGroup>
-        
-        <FormGroup>
-          <Label htmlFor="password">Password</Label>
-          <Input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </FormGroup>
-        
-        <FormGroup>
-          <Label htmlFor="confirmPassword">Confirm Password</Label>
-          <Input
-            type="password"
-            id="confirmPassword"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </FormGroup>
-        
-        {passwordError && <ErrorMessage>{passwordError}</ErrorMessage>}
-        {state.error && <ErrorMessage>{state.error}</ErrorMessage>}
-        
-        <Button type="submit" disabled={state.loading}>
-          {state.loading ? 'Creating Account...' : 'Register'}
-        </Button>
-        
-        <LoginLink>
-          Already have an account? <Link to="/login">Login</Link>
-        </LoginLink>
-      </RegisterForm>
+        <RegisterForm onSubmit={handleSubmit}>
+          <FormGroup>
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </FormGroup>
+          
+          <FormGroup>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </FormGroup>
+          
+          <FormGroup>
+            <Label htmlFor="username">Username</Label>
+            <Input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </FormGroup>
+          
+          <FormGroup>
+            <Label htmlFor="password">Password</Label>
+            <Input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </FormGroup>
+          
+          <FormGroup>
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </FormGroup>
+          
+          <Button type="submit" disabled={isLoading || password !== confirmPassword}>
+            {isLoading ? 'Registering...' : 'Register'}
+          </Button>
+        </RegisterForm>
+      </RegisterCard>
     </RegisterContainer>
   );
 };

@@ -1,175 +1,132 @@
 import React from 'react';
 import styled from 'styled-components';
-import { motion } from 'framer-motion';
+import { FaSpinner } from 'react-icons/fa';
 
 interface DrawWheelProps {
-  numbers: string[];
-  spinning: boolean;
-  selectedNumber?: string;
-  onSpinComplete?: () => void;
+  isSpinning: boolean;
 }
 
 const WheelContainer = styled.div`
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 1.5rem 0;
+`;
+
+const Wheel = styled.div<{ isSpinning: boolean }>`
   width: 300px;
   height: 300px;
-  margin: 0 auto;
-`;
-
-const Wheel = styled(motion.div)`
-  position: relative;
-  width: 100%;
-  height: 100%;
   border-radius: 50%;
+  position: relative;
   overflow: hidden;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  background: #FFD100;
+  transform: ${props => props.isSpinning ? 'rotate(0deg)' : 'rotate(0deg)'};
+  animation: ${props => props.isSpinning ? 'spin 3s cubic-bezier(0.1, 0.7, 0.1, 1) forwards' : 'none'};
+  
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(1440deg);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    width: 250px;
+    height: 250px;
+  }
 `;
 
-const WheelSegment = styled.div<{ index: number; total: number }>`
+const WheelSection = styled.div<{ color: string; rotation: number }>`
   position: absolute;
   width: 50%;
   height: 50%;
-  transform-origin: bottom right;
-  left: 0;
   top: 0;
-  transform: rotate(${props => (props.index * (360 / props.total))}deg);
-  clip-path: polygon(100% 0, 100% 100%, 0 0);
+  left: 25%;
+  transform-origin: bottom center;
+  transform: rotate(${props => props.rotation}deg);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  background: ${props => props.color};
   display: flex;
-  align-items: center;
   justify-content: center;
-  background-color: ${props => props.index % 2 === 0 ? '#FFD100' : '#004F9F'};
-`;
-
-const SegmentContent = styled.div<{ index: number; total: number }>`
-  position: absolute;
-  transform: rotate(${props => (props.index * (360 / props.total) + (180 / props.total))}deg);
-  width: 100px;
-  text-align: center;
-  color: ${props => props.index % 2 === 0 ? '#000' : '#fff'};
-  font-weight: bold;
-  font-size: 14px;
-  left: 75px;
-  top: 30px;
-`;
-
-const WheelPointer = styled.div`
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-top: 30px solid #E30613;
-  z-index: 10;
+  padding-top: 10%;
+  
+  span {
+    transform: rotate(180deg);
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  }
 `;
 
 const WheelCenter = styled.div`
   position: absolute;
   width: 50px;
   height: 50px;
-  background-color: white;
+  background: ${props => props.theme.colors.primary};
   border-radius: 50%;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 5;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  
+  svg {
+    color: black;
+    font-size: 1.5rem;
+  }
 `;
 
-const MTNLogo = styled.div`
-  font-size: 12px;
-  font-weight: bold;
-  color: #FFD100;
-  background-color: #004F9F;
-  padding: 5px;
-  border-radius: 50%;
-`;
-
-const SelectedNumber = styled(motion.div)`
+const WheelPointer = styled.div`
   position: absolute;
-  top: 320px;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 24px;
-  font-weight: bold;
-  color: #004F9F;
-  text-align: center;
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 30px solid ${props => props.theme.colors.primary};
+  z-index: 5;
 `;
 
-const DrawWheel: React.FC<DrawWheelProps> = ({ 
-  numbers, 
-  spinning, 
-  selectedNumber,
-  onSpinComplete 
-}) => {
-  // Animation variants
-  const wheelVariants = {
-    spinning: {
-      rotate: [0, 1800 + Math.random() * 360],
-      transition: {
-        duration: 5,
-        ease: "easeOut",
-        onComplete: onSpinComplete
-      }
-    },
-    stopped: {
-      rotate: 0,
-      transition: {
-        duration: 0
-      }
-    }
-  };
-
-  const selectedVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        delay: 5.2,
-        duration: 0.5
-      }
-    }
-  };
-
+const DrawWheel: React.FC<DrawWheelProps> = ({ isSpinning }) => {
+  // Colors for wheel sections
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', 
+    '#118AB2', '#073B4C', '#EF476F', '#FFC43D'
+  ];
+  
+  // Generate wheel sections (8 sections)
+  const sections = Array.from({ length: 8 }, (_, i) => ({
+    color: colors[i],
+    rotation: i * 45,
+    digit: i
+  }));
+  
   return (
-    <div>
-      <WheelContainer>
-        <WheelPointer />
-        <Wheel
-          animate={spinning ? "spinning" : "stopped"}
-          variants={wheelVariants}
-        >
-          {numbers.map((number, index) => (
-            <React.Fragment key={index}>
-              <WheelSegment index={index} total={numbers.length} />
-              <SegmentContent index={index} total={numbers.length}>
-                {number}
-              </SegmentContent>
-            </React.Fragment>
-          ))}
-        </Wheel>
+    <WheelContainer>
+      <Wheel isSpinning={isSpinning}>
+        {sections.map((section, index) => (
+          <WheelSection 
+            key={index}
+            color={section.color}
+            rotation={section.rotation}
+          >
+            <span>{section.digit}</span>
+          </WheelSection>
+        ))}
         <WheelCenter>
-          <MTNLogo>MTN</MTNLogo>
+          {isSpinning && <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />}
         </WheelCenter>
-      </WheelContainer>
-      
-      {selectedNumber && (
-        <SelectedNumber
-          initial="hidden"
-          animate={spinning ? "hidden" : "visible"}
-          variants={selectedVariants}
-        >
-          Winner: {selectedNumber}
-        </SelectedNumber>
-      )}
-    </div>
+      </Wheel>
+      <WheelPointer />
+    </WheelContainer>
   );
 };
 
