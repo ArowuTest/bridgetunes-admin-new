@@ -47,3 +47,4 @@ const Switch: React.FC<SwitchProps> = ({ isActive, onToggle, disabled = false })
 
 export default Switch;
 
+
