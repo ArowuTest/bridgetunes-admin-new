@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FaTimes, FaCalendarAlt } from 'react-icons/fa';
 import { notificationService } from '../../services/notification.service';
+// Import necessary types
+import { NotificationTemplate, Segment } from '../../types/notification.types'; 
 
 // Reuse styled components from other modals
 const ModalOverlay = styled.div`
@@ -162,26 +164,22 @@ const DatePickerWrapper = styled.div`
   }
 `;
 
-// Define types for Segment and Template (should ideally be imported)
-interface Segment {
-  id: string;
-  name: string;
-  userCount?: number;
-}
-
-interface Template {
-  id: string;
-  name: string;
-  type: string;
-}
-
+// Update props interface
 interface CreateCampaignModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCampaignCreated: (campaign: any) => void;
+  templates: NotificationTemplate[]; // Added prop
+  segments: Segment[]; // Added prop
 }
 
-const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ isOpen, onClose, onCampaignCreated }) => {
+const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onCampaignCreated, 
+  templates, // Use prop
+  segments   // Use prop
+}) => {
   const [name, setName] = useState('');
   const [segmentId, setSegmentId] = useState('');
   const [templateId, setTemplateId] = useState('');
@@ -191,41 +189,22 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ isOpen, onClo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const [availableSegments, setAvailableSegments] = useState<Segment[]>([]);
-  const [availableTemplates, setAvailableTemplates] = useState<Template[]>([]);
-  
-  // Fetch segments and templates when modal opens
+  // Removed internal state for segments and templates
+  // Removed useEffect hook that fetched data
+
+  // Set default selections when modal opens and props are available
   useEffect(() => {
     if (isOpen) {
       // Reset form
       setName('');
-      setSegmentId('');
-      setTemplateId('');
+      setSegmentId(segments.length > 0 ? segments[0].id : '');
+      setTemplateId(templates.length > 0 ? templates[0].id : '');
       setScheduleDate('');
       setScheduleTime('');
       setRecurrence('ONE_TIME');
       setError(null);
-      
-      // Fetch data for dropdowns
-      const fetchData = async () => {
-        try {
-          const [segmentsData, templatesData] = await Promise.all([
-            notificationService.getSegments(),
-            notificationService.getAllTemplates()
-          ]);
-          setAvailableSegments(segmentsData);
-          setAvailableTemplates(templatesData);
-          // Set default selection if data exists
-          if (segmentsData.length > 0) setSegmentId(segmentsData[0].id);
-          if (templatesData.length > 0) setTemplateId(templatesData[0].id);
-        } catch (err) {
-          console.error('Error fetching segments/templates for modal:', err);
-          setError('Could not load segments or templates.');
-        }
-      };
-      fetchData();
     }
-  }, [isOpen]);
+  }, [isOpen, segments, templates]);
   
   const handleSubmit = async () => {
     // Validate form
@@ -319,10 +298,10 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ isOpen, onClo
               id="campaign-segment"
               value={segmentId}
               onChange={e => setSegmentId(e.target.value)}
-              disabled={availableSegments.length === 0}
+              disabled={segments.length === 0} // Use prop
             >
-              {availableSegments.length === 0 && <option>Loading segments...</option>}
-              {availableSegments.map(segment => (
+              {segments.length === 0 && <option>No segments available</option>} {/* Updated message */}
+              {segments.map(segment => (
                 <option key={segment.id} value={segment.id}>
                   {segment.name} ({segment.userCount ?? 'N/A'} users)
                 </option>
@@ -336,10 +315,10 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ isOpen, onClo
               id="campaign-template"
               value={templateId}
               onChange={e => setTemplateId(e.target.value)}
-              disabled={availableTemplates.length === 0}
+              disabled={templates.length === 0} // Use prop
             >
-              {availableTemplates.length === 0 && <option>Loading templates...</option>}
-              {availableTemplates.map(template => (
+              {templates.length === 0 && <option>No templates available</option>} {/* Updated message */}
+              {templates.map(template => (
                 <option key={template.id} value={template.id}>
                   {template.name} ({template.type})
                 </option>
@@ -409,3 +388,4 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({ isOpen, onClo
 };
 
 export default CreateCampaignModal;
+
