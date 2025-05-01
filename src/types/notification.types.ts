@@ -38,6 +38,7 @@ export interface NotificationTemplate {
   channel: string;
   createdAt: string;
   updatedAt: string;
+  status?: 'ACTIVE' | 'INACTIVE' | 'DRAFT'; // Added optional status
 }
 
 export interface NotificationCreationParams {
@@ -70,3 +71,15 @@ export interface NotificationStats {
     [key: string]: number;
   };
 }
+
+
+// Added Segment interface
+export interface Segment {
+  id: string;
+  name: string;
+  description?: string;
+  userCount?: number; // Optional user count
+  createdAt?: string;
+  updatedAt?: string;
+}
+
