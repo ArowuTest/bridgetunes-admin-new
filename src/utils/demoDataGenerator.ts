@@ -108,65 +108,75 @@ export const generateDemoData = (): DemoDataType => {
     } as User
   ];
   
-  // Generate draws
-  const draws = [
+  // Generate draws (Simplified Draw type for demo generator)
+  const demoDraws = [
     {
       id: 'draw_1',
       name: 'Weekly Draw - Week 1',
       date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'completed',
+      status: 'COMPLETED',
       participantCount: 85,
       winnerCount: 5,
       totalPrize: 50000,
-      filterCriteria: {
-        days: ['Monday'],
-        endingDigits: [0, 1]
-      }
+      drawType: 'DAILY',
+      eligibleDigits: [0, 1],
+      useDefault: false,
+      createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
       id: 'draw_2',
       name: 'Weekly Draw - Week 2',
       date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'completed',
+      status: 'COMPLETED',
       participantCount: 92,
       winnerCount: 5,
       totalPrize: 50000,
-      filterCriteria: {
-        days: ['Tuesday'],
-        endingDigits: [2, 3]
-      }
+      drawType: 'DAILY',
+      eligibleDigits: [2, 3],
+      useDefault: false,
+      createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
       id: 'draw_3',
       name: 'Weekly Draw - Week 3',
       date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'completed',
+      status: 'COMPLETED',
       participantCount: 103,
       winnerCount: 5,
       totalPrize: 50000,
-      filterCriteria: {
-        days: ['Wednesday'],
-        endingDigits: [4, 5]
-      }
+      drawType: 'DAILY',
+      eligibleDigits: [4, 5],
+      useDefault: false,
+      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
       id: 'draw_4',
       name: 'Weekly Draw - Week 4',
       date: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'scheduled',
+      status: 'SCHEDULED',
       participantCount: 0,
       winnerCount: 0,
       totalPrize: 50000,
-      filterCriteria: {
-        days: ['Thursday'],
-        endingDigits: [6, 7]
-      }
+      drawType: 'DAILY',
+      eligibleDigits: [6, 7],
+      useDefault: false,
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     }
   ];
+
+  // Cast demoDraws to the actual Draw type
+  const draws: Draw[] = demoDraws.map(d => ({
+    ...d,
+    drawDate: d.date, // Map date to drawDate
+  }));
   
   // Generate winners for completed draws
   const winners: Winner[] = [];
-  const completedDraws = draws.filter(draw => draw.status === 'completed');
+  const completedDraws = demoDraws.filter(draw => draw.status === 'COMPLETED');
   
   for (let i = 0; i < completedDraws.length; i++) {
     const draw = completedDraws[i];
@@ -180,6 +190,12 @@ export const generateDemoData = (): DemoDataType => {
         drawId: draw.id,
         msisdn: subscriber.msisdn,
         prizeAmount: draw.totalPrize / draw.winnerCount,
+        // Add missing required fields
+        prizeCategory: j === 0 ? 'JACKPOT' : 'CONSOLATION', // Example category
+        isOptedIn: subscriber.optInStatus, // Use subscriber opt-in status
+        isValid: Math.random() > 0.05, // 95% valid wins for demo
+        winDate: draw.date, // Use draw date as win date
+        // Optional fields from previous fixes
         status: Math.random() > 0.2 ? 'paid' : 'pending', // 80% paid, 20% pending
         paymentDate: Math.random() > 0.2 ? new Date(new Date(draw.date).getTime() + 2 * 24 * 60 * 60 * 1000).toISOString() : null,
         paymentReference: Math.random() > 0.2 ? `PAY${Math.floor(1000000000 + Math.random() * 9000000000)}` : null,
@@ -189,41 +205,44 @@ export const generateDemoData = (): DemoDataType => {
     }
   }
   
-  // Generate notification templates
-  const notificationTemplates = [
+  // Generate notification templates (Simplified for demo)
+  const notificationTemplates: NotificationTemplate[] = [
     {
       id: 'template_1',
       name: 'Welcome Message',
       title: 'Welcome to MyNumba Don Win!',
       message: 'Dear customer, welcome to MTN MyNumba Don Win promotion! Recharge your line to qualify for weekly draws and win amazing prizes. Reply STOP to opt out.',
-      type: 'info',
-      channel: 'sms',
+      type: 'info', // Use type
+      channel: 'sms', // Use channel
       createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+      updatedAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'ACTIVE'
     },
     {
       id: 'template_2',
       name: 'Draw Reminder',
       title: 'Draw Reminder',
       message: 'Dear customer, the next MyNumba Don Win draw is tomorrow! Recharge your line now to qualify and stand a chance to win amazing prizes.',
-      type: 'info',
-      channel: 'sms',
+      type: 'info', // Use type
+      channel: 'sms', // Use channel
       createdAt: new Date(Date.now() - 85 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 85 * 24 * 60 * 60 * 1000).toISOString()
+      updatedAt: new Date(Date.now() - 85 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'ACTIVE'
     },
     {
       id: 'template_3',
       name: 'Winner Announcement',
       title: 'Congratulations! You Won!',
       message: 'Congratulations! Your number {{msisdn}} has won ₦{{amount}} in the MyNumba Don Win promotion! Your prize will be credited to your account within 48 hours.',
-      type: 'success',
-      channel: 'sms',
+      type: 'success', // Use type
+      channel: 'sms', // Use channel
       createdAt: new Date(Date.now() - 80 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 80 * 24 * 60 * 60 * 1000).toISOString()
+      updatedAt: new Date(Date.now() - 80 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'ACTIVE'
     }
   ];
   
-  // Generate notifications with proper structure matching the Notification interface
+  // Generate notifications (Simplified for demo)
   const notifications: Notification[] = [];
   
   // Welcome notifications for some subscribers
@@ -233,9 +252,9 @@ export const generateDemoData = (): DemoDataType => {
     notifications.push({
       id: `notification_${notifications.length + 1}`,
       title: notificationTemplates[0].title,
-      message: notificationTemplates[0].message,
-      type: notificationTemplates[0].type,
-      channel: notificationTemplates[0].channel,
+      message: notificationTemplates[0].message, // Use message from template
+      type: notificationTemplates[0].type, // Use type from template
+      channel: notificationTemplates[0].channel, // Use channel from template
       status: 'sent',
       createdAt: new Date(Date.now() - (90 - i) * 24 * 60 * 60 * 1000).toISOString(),
       scheduledFor: undefined,
@@ -288,7 +307,7 @@ export const generateDemoData = (): DemoDataType => {
     totalRevenue: topUps.reduce((sum, topUp) => sum + topUp.amount, 0),
     totalDraws: draws.length,
     totalWinners: winners.length,
-    totalPrizes: draws.reduce((sum, draw) => sum + draw.totalPrize, 0)
+    totalPrizes: demoDraws.reduce((sum, draw) => sum + draw.totalPrize, 0) // Use demoDraws for totalPrize
   };
   
   // Generate subscriber growth data
@@ -317,7 +336,7 @@ export const generateDemoData = (): DemoDataType => {
   for (let i = 0; i < amounts.length; i++) {
     const amount = amounts[i];
     const count = topUps.filter(t => t.amount === amount).length;
-    const percentage = (count / totalTopUps) * 100;
+    const percentage = totalTopUps > 0 ? (count / totalTopUps) * 100 : 0;
     
     topUpDistribution.push({
       amount,
@@ -361,3 +380,4 @@ export const generateDemoData = (): DemoDataType => {
 };
 
 export default generateDemoData;
+
