@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { FaTimes } from 'react-icons/fa';
 import { notificationService } from '../../services/notification.service';
 import { NotificationTemplate } from '../../types/notification.types';
-import Switch from 'components/Switch';
+import Switch from '../Switch';
 import ReactQuill from 'react-quill'; // Import ReactQuill
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles
 
@@ -449,4 +449,5 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ isOpen, onClo
 };
 
 export default CreateTemplateModal;
+
 
