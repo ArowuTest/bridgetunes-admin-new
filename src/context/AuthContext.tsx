@@ -135,6 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.setItem(USER_KEY, JSON.stringify(validatedUser)); // Save the validated user
         setIsAuthenticated(true);
         setUser(validatedUser); // Set the validated user in state
+        navigate("/dashboard"); // Redirect to dashboard after successful login
         setIsLoading(false);
         return true;
       } else {
