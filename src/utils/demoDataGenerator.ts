@@ -89,8 +89,8 @@ export const generateDemoData = (): DemoDataType => {
       email: "admin@bridgetunes.com",
       role: "admin",
       name: "Demo Admin", // Added name
-      // status: "active", // Status is not part of the central User type
-      // lastLogin: new Date().toISOString(), // lastLogin is not part of the central User type
+      status: "active", // Added optional status
+      lastLogin: new Date().toISOString(), // Added optional lastLogin
       createdAt: new Date(
         Date.now() - 90 * 24 * 60 * 60 * 1000
       ).toISOString(),
@@ -102,8 +102,8 @@ export const generateDemoData = (): DemoDataType => {
       email: "manager@bridgetunes.com",
       role: "manager",
       name: "Demo Manager", // Added name
-      // status: "active",
-      // lastLogin: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      status: "active", // Added optional status
+      lastLogin: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // Added optional lastLogin
       createdAt: new Date(
         Date.now() - 60 * 24 * 60 * 60 * 1000
       ).toISOString(),
@@ -115,8 +115,8 @@ export const generateDemoData = (): DemoDataType => {
       email: "viewer@bridgetunes.com",
       role: "viewer",
       name: "Demo Viewer", // Added name
-      // status: "active",
-      // lastLogin: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      status: "active", // Added optional status
+      lastLogin: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // Added optional lastLogin
       createdAt: new Date(
         Date.now() - 30 * 24 * 60 * 60 * 1000
       ).toISOString(),
@@ -310,6 +310,7 @@ export const generateDemoData = (): DemoDataType => {
       title: notificationTemplates[0].title, // Add title
       type: notificationTemplates[0].type, // Add type
       channel: notificationTemplates[0].channel, // Add channel
+      recipients: 1, // Added missing required property
     });
   }
   // Winner notifications
@@ -335,6 +336,7 @@ export const generateDemoData = (): DemoDataType => {
       title: notificationTemplates[2].title, // Add title
       type: notificationTemplates[2].type, // Add type
       channel: notificationTemplates[2].channel, // Add channel
+      recipients: 1, // Added missing required property
     });
   }
 
