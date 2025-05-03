@@ -18,10 +18,18 @@ export interface LoginCredentials {
   password: string;
 }
 
+// Added: Interface for user registration data
+export interface RegisterData {
+  email: string;
+  password: string;
+  username: string;
+  name: string;
+  role: "admin" | "manager" | "viewer";
+}
+
 // Interface for the expected response from the backend /auth/login endpoint
 export interface AuthResponse {
   token: string;
   user: Partial<User>; // Backend might only return partial user data on login
 }
-
 
