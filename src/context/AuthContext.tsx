@@ -3,8 +3,8 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { useNavigate } from "react-router-dom";
 import { useDemoMode } from "./DemoModeContext";
 // Import central types and auth service functions
-import { User, LoginCredentials, AuthResponse } from "../types/auth.types";
-import { login as apiLogin, logout as apiLogout, getAuthToken } from "../services/auth.service";
+import { User, LoginCredentials, AuthResponse } from "../types/auth.types"; // Use central User type
+import { login as apiLogin, logout as apiLogout } from "../services/auth.service";
 
 // Define the shape of the context value
 interface AuthContextType {
@@ -29,7 +29,6 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  // State holds the full User object as defined in auth.types.ts
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,17 +44,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (token && savedUserJson) {
         try {
           const savedUser = JSON.parse(savedUserJson);
-          // Validate the saved user object against the central User type
+          // Validate the saved user object against the central User type (including name)
           if (
             savedUser &&
             typeof savedUser === "object" &&
             typeof savedUser.id === "string" &&
             typeof savedUser.username === "string" &&
             typeof savedUser.email === "string" &&
-            typeof savedUser.role === "string" && // Add other required fields if necessary
+            typeof savedUser.role === "string" &&
+            typeof savedUser.name === "string" && // Check for name
             typeof savedUser.createdAt === "string" &&
             typeof savedUser.updatedAt === "string"
-            // typeof savedUser.name === 'string' // Name is not in the central User type, add if needed
           ) {
             setIsAuthenticated(true);
             setUser(savedUser as User);
@@ -64,14 +63,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         } catch (e) {
           console.error("Failed to parse or validate user data from localStorage", e);
-          // Clear invalid data
           localStorage.removeItem(AUTH_TOKEN_KEY);
           localStorage.removeItem(USER_KEY);
           setIsAuthenticated(false);
           setUser(null);
         }
       } else {
-        // Ensure state is cleared if no token/user found
         setIsAuthenticated(false);
         setUser(null);
       }
@@ -94,16 +91,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             username: "admin",
             email: "admin@bridgetunes.com",
             role: "admin" as const,
-            createdAt: new Date().toISOString(), // Add dummy dates
+            name: "Demo Admin", // Include name for demo user
+            createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            // name: 'Demo Admin' // Name is not in central User type
           };
           loginResponse = {
             success: true,
             token: "demo-token-123",
-            user: demoUser,
+            user: demoUser, // Backend response uses Partial<User>
           };
-          // Manually save demo token
           localStorage.setItem(AUTH_TOKEN_KEY, loginResponse.token);
         } else {
           setError("Invalid credentials. In demo mode, use admin@bridgetunes.com / admin123");
@@ -116,22 +112,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // Process the response (token is already saved by apiLogin for non-demo)
-      if (loginResponse.success && loginResponse.token && loginResponse.user) {
-        // Ensure the user object from response conforms to the User type
-        // Provide defaults only if absolutely necessary and backend can't guarantee fields
+      if (loginResponse.token && loginResponse.user) {
+        const backendUser = loginResponse.user; // This is Partial<User>
+
+        // Construct the full User object for the context state, providing defaults
         const validatedUser: User = {
-          id: loginResponse.user.id ?? "unknown-id",
-          username: loginResponse.user.username ?? email,
-          email: loginResponse.user.email ?? email,
-          role: (loginResponse.user.role && ["admin", "manager", "viewer"].includes(loginResponse.user.role)) ? loginResponse.user.role : "admin",
-          createdAt: loginResponse.user.createdAt ?? new Date().toISOString(),
-          updatedAt: loginResponse.user.updatedAt ?? new Date().toISOString(),
-          // name: loginResponse.user.name ?? 'User' // Name not in central type
+          id: backendUser.id ?? "unknown-id",
+          username: backendUser.username ?? email,
+          email: backendUser.email ?? email,
+          role: (backendUser.role && ["admin", "manager", "viewer"].includes(backendUser.role)) ? backendUser.role : "admin",
+          name: backendUser.name ?? backendUser.username ?? "User", // Add fallback for name
+          createdAt: backendUser.createdAt ?? new Date().toISOString(),
+          updatedAt: backendUser.updatedAt ?? new Date().toISOString(),
         };
 
-        localStorage.setItem(USER_KEY, JSON.stringify(validatedUser));
+        localStorage.setItem(USER_KEY, JSON.stringify(validatedUser)); // Save the validated user
         setIsAuthenticated(true);
-        setUser(validatedUser);
+        setUser(validatedUser); // Set the validated user in state
         setIsLoading(false);
         return true;
       } else {
@@ -143,7 +140,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (err: any) {
       console.error("Login error in AuthContext:", err);
       setError(err.message || "An error occurred during login");
-      // Ensure token/user are cleared on login failure
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
       setIsAuthenticated(false);
@@ -154,8 +150,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = (): void => {
-    apiLogout(); // Clears token from localStorage
-    localStorage.removeItem(USER_KEY); // Clear user data
+    apiLogout();
+    localStorage.removeItem(USER_KEY);
     setIsAuthenticated(false);
     setUser(null);
     navigate("/login");
@@ -166,7 +162,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      // Simulate API call
       return new Promise((resolve) => {
         setTimeout(() => {
           setIsLoading(false);
@@ -187,7 +182,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 };
 
-// Custom hook to use the auth context
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -195,5 +189,6 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+
 
 
