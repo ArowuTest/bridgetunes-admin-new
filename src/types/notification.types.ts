@@ -1,3 +1,5 @@
+// /home/ubuntu/bridgetunes-admin-new/src/types/notification.types.ts
+
 export interface NotificationType {
   id: string;
   name: string;
@@ -18,6 +20,7 @@ export interface NotificationStatus {
 
 export interface Notification {
   id: string;
+  msisdn: string; // Added missing property
   title: string;
   message: string;
   type: string;
@@ -26,7 +29,7 @@ export interface Notification {
   createdAt: string;
   scheduledFor?: string;
   sentAt?: string;
-  recipients: number;
+  recipients: number; // Note: This seems redundant if msisdn is present, might need review
 }
 
 export interface NotificationTemplate {
@@ -38,7 +41,7 @@ export interface NotificationTemplate {
   channel: string;
   createdAt: string;
   updatedAt: string;
-  status?: 'ACTIVE' | 'INACTIVE' | 'DRAFT'; // Added optional status
+  status?: "ACTIVE" | "INACTIVE" | "DRAFT"; // Added optional status
 }
 
 export interface NotificationCreationParams {
@@ -64,14 +67,9 @@ export interface NotificationStats {
   totalDelivered: number;
   totalFailed: number;
   deliveryRate: number;
-  channelBreakdown: {
-    [key: string]: number;
-  };
-  typeBreakdown: {
-    [key: string]: number;
-  };
+  channelBreakdown: { [key: string]: number };
+  typeBreakdown: { [key: string]: number };
 }
-
 
 // Added Segment interface
 export interface Segment {
@@ -82,4 +80,5 @@ export interface Segment {
   createdAt?: string;
   updatedAt?: string;
 }
+
 
