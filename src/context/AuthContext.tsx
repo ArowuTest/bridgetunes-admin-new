@@ -107,9 +107,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           };
           localStorage.setItem(AUTH_TOKEN_KEY, loginResponse.token);
         } else {
-          setError("Invalid credentials. In demo mode, use admin@bridgetunes.com / admin123");
+          // Throw error for invalid demo credentials
+          const demoErrorMsg = "Invalid credentials. In demo mode, use admin@bridgetunes.com / admin123";
+          setError(demoErrorMsg);
           setIsLoading(false);
-          return false;
+          throw new Error(demoErrorMsg); // Reject promise
         }
       } else {
         // Call the actual API login function
@@ -140,12 +142,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(true);
         setUser(validatedUser); // Set the validated user in state
         setIsLoading(false);
+        navigate("/dashboard", { replace: true }); // Navigate after successful state update
         return true;
       } else {
-        // Corrected: Remove reliance on loginResponse.message
-        setError("Login failed: Invalid response structure from server.");
+        // Throw error for invalid response structure
+        const invalidResponseMsg = "Login failed: Invalid response structure from server.";
+        setError(invalidResponseMsg);
         setIsLoading(false);
-        return false;
+        throw new Error(invalidResponseMsg); // Reject promise
       }
     } catch (err: any) {
       console.error("Login error in AuthContext:", err);
