@@ -1,7 +1,8 @@
-import React from 'react';
-import styled from 'styled-components';
-import { User } from '../../types/user.types';
-import { FaEdit, FaTrash, FaKey, FaHistory } from 'react-icons/fa';
+// /home/ubuntu/bridgetunes-admin-new/src/components/user/UserTable.tsx
+import React from "react";
+import styled from "styled-components";
+import { User } from "../../types/auth.types"; // Updated import path
+import { FaEdit, FaTrash, FaKey, FaHistory } from "react-icons/fa";
 
 interface UserTableProps {
   users: User[];
@@ -34,7 +35,7 @@ const TableBody = styled.tbody`
   tr:nth-child(even) {
     background-color: #f8f9fa;
   }
-  
+
   tr:hover {
     background-color: rgba(255, 209, 0, 0.05);
   }
@@ -56,20 +57,29 @@ const TableCell = styled.td`
   color: #212529;
 `;
 
-const UserStatus = styled.span<{ status: string }>`
+// Updated UserStatus to handle potentially undefined status
+const UserStatus = styled.span<{ status?: string }>`
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  background-color: ${props => 
-    props.status === 'active' ? '#d1e7dd' : 
-    props.status === 'inactive' ? '#f8d7da' : 
-    '#fff3cd'};
-  color: ${props => 
-    props.status === 'active' ? '#0f5132' : 
-    props.status === 'inactive' ? '#721c24' : 
-    '#856404'};
+  background-color: ${(props) =>
+    props.status === "active"
+      ? "#d1e7dd"
+      : props.status === "inactive"
+      ? "#f8d7da"
+      : props.status === "pending"
+      ? "#fff3cd"
+      : "#e2e3e5"}; // Default for undefined
+  color: ${(props) =>
+    props.status === "active"
+      ? "#0f5132"
+      : props.status === "inactive"
+      ? "#721c24"
+      : props.status === "pending"
+      ? "#856404"
+      : "#41464b"}; // Default for undefined
 `;
 
 const UserRole = styled.span<{ role: string }>`
@@ -78,14 +88,18 @@ const UserRole = styled.span<{ role: string }>`
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  background-color: ${props => 
-    props.role === 'admin' ? '#cfe2ff' : 
-    props.role === 'manager' ? '#d1e7dd' : 
-    '#e2e3e5'};
-  color: ${props => 
-    props.role === 'admin' ? '#084298' : 
-    props.role === 'manager' ? '#0f5132' : 
-    '#41464b'};
+  background-color: ${(props) =>
+    props.role === "admin"
+      ? "#cfe2ff"
+      : props.role === "manager"
+      ? "#d1e7dd"
+      : "#e2e3e5"};
+  color: ${(props) =>
+    props.role === "admin"
+      ? "#084298"
+      : props.role === "manager"
+      ? "#0f5132"
+      : "#41464b"};
 `;
 
 const ActionButton = styled.button`
@@ -100,12 +114,12 @@ const ActionButton = styled.button`
   background-color: transparent;
   color: #6c757d;
   transition: all 0.2s;
-  
+
   &:hover {
     background-color: #f8f9fa;
     color: #212529;
   }
-  
+
   &:focus {
     outline: none;
   }
@@ -121,7 +135,7 @@ const ActionButtonDanger = styled(ActionButton)`
 const ActionButtonPrimary = styled(ActionButton)`
   &:hover {
     background-color: rgba(255, 209, 0, 0.1);
-    color: #FFD100;
+    color: #ffd100;
   }
 `;
 
@@ -137,19 +151,20 @@ const ActionsContainer = styled.div`
   gap: 0.5rem;
 `;
 
-const UserTable: React.FC<UserTableProps> = ({ 
-  users, 
-  onEdit, 
-  onDelete, 
+const UserTable: React.FC<UserTableProps> = ({
+  users,
+  onEdit,
+  onDelete,
   onResetPassword,
-  onViewActivity 
+  onViewActivity,
 }) => {
   return (
     <TableContainer>
       <Table>
         <TableHead>
           <TableRow>
-            <TableHeader>Username</TableHeader>
+            {/* Display name instead of username */}
+            <TableHeader>Name</TableHeader>
             <TableHeader>Email</TableHeader>
             <TableHeader>Role</TableHeader>
             <TableHeader>Status</TableHeader>
@@ -159,30 +174,47 @@ const UserTable: React.FC<UserTableProps> = ({
           </TableRow>
         </TableHead>
         <TableBody>
-          {users.map(user => (
+          {users.map((user) => (
             <TableRow key={user.id}>
-              <TableCell>{user.username}</TableCell>
+              {/* Display name */}
+              <TableCell>{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
                 <UserRole role={user.role}>{user.role}</UserRole>
               </TableCell>
               <TableCell>
-                <UserStatus status={user.status}>{user.status}</UserStatus>
+                {/* Handle potentially undefined status */}
+                <UserStatus status={user.status}>{user.status ?? "N/A"}</UserStatus>
               </TableCell>
-              <TableCell>{user.lastLogin || 'Never'}</TableCell>
-              <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+              {/* Handle potentially undefined lastLogin */}
+              <TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Never"}</TableCell>
+              <TableCell>
+                {new Date(user.createdAt).toLocaleDateString()}
+              </TableCell>
               <TableCell>
                 <ActionsContainer>
-                  <ActionButtonPrimary onClick={() => onEdit(user)} title="Edit User">
+                  <ActionButtonPrimary
+                    onClick={() => onEdit(user)}
+                    title="Edit User"
+                  >
                     <FaEdit />
                   </ActionButtonPrimary>
-                  <ActionButtonDanger onClick={() => onDelete(user.id)} title="Delete User">
+                  <ActionButtonDanger
+                    onClick={() => onDelete(user.id)}
+                    title="Delete User"
+                  >
                     <FaTrash />
                   </ActionButtonDanger>
-                  <ActionButton onClick={() => onResetPassword(user.id)} title="Reset Password">
+                  <ActionButton
+                    onClick={() => onResetPassword(user.id)}
+                    title="Reset Password"
+                  >
                     <FaKey />
                   </ActionButton>
-                  <ActionButtonInfo onClick={() => onViewActivity(user.id)} title="View Activity">
+                  <ActionButtonInfo
+                    onClick={() => onViewActivity(user.id)}
+                    title="View Activity"
+                  >
                     <FaHistory />
                   </ActionButtonInfo>
                 </ActionsContainer>
@@ -196,3 +228,5 @@ const UserTable: React.FC<UserTableProps> = ({
 };
 
 export default UserTable;
+
+
