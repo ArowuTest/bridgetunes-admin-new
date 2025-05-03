@@ -138,9 +138,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsLoading(false);
         return true;
       } else {
-        // Handle cases where login response is not successful or missing data
-        // Use optional chaining for message if loginResponse itself might be problematic
-        setError(loginResponse?.message || "Login failed: Invalid response from server.");
+        // Corrected: Remove reliance on loginResponse.message
+        setError("Login failed: Invalid response structure from server.");
         setIsLoading(false);
         return false;
       }
