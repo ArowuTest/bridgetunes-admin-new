@@ -369,18 +369,16 @@ export const generateDemoData = (): DemoDataType => {
     },
   ];
 
-  // Generate Dashboard Stats conforming to DashboardStats type
+  // Generate Dashboard Stats conforming to DashboardStats type in dashboard.types.ts
   const dashboardStats: DashboardStats = {
-    totalSubscribers: subscribers.length,
-    activeSubscribers: subscribers.filter((s) => s.optInStatus).length,
-    totalTopUps: topUps.length,
-    totalTopUpValue: topUps.reduce((sum, t) => sum + t.amount, 0),
-    totalWinners: winners.length,
-    totalPrizeAwarded: winners.reduce((sum, w) => sum + w.prizeAmount, 0),
-    pendingPayouts: winners.filter((w) => w.status === "pending").length,
-    pendingPayoutValue: winners
-      .filter((w) => w.status === "pending")
-      .reduce((sum, w) => sum + w.prizeAmount, 0),
+    totalUsers: subscribers.length, // Use totalUsers based on type def
+    activeUsers: subscribers.filter((s) => s.optInStatus).length, // Use activeUsers based on type def
+    totalTopups: topUps.length, // Use totalTopups based on type def
+    totalRevenue: topUps.reduce((sum, t) => sum + t.amount, 0), // Use totalRevenue based on type def
+    totalDraws: draws.length, // Use totalDraws based on type def
+    totalWinners: winners.length, // Use totalWinners based on type def
+    totalPrizes: winners.reduce((sum, w) => sum + w.prizeAmount, 0), // Use totalPrizes based on type def
+    // Removed properties not in DashboardStats type: totalSubscribers, activeSubscribers, totalTopUpValue, totalPrizeAwarded, pendingPayouts, pendingPayoutValue
   };
 
   // Generate Subscriber Growth Data conforming to SubscriberGrowth type
@@ -394,14 +392,22 @@ export const generateDemoData = (): DemoDataType => {
   }
 
   // Generate Top-Up Distribution Data conforming to TopUpDistribution type
-  const topUpDistribution: TopUpDistribution[] = [
-    { range: "₦100-₦199", count: topUps.filter((t) => t.amount < 200).length },
-    { range: "₦200-₦499", count: topUps.filter((t) => t.amount >= 200 && t.amount < 500).length },
-    { range: "₦500-₦999", count: topUps.filter((t) => t.amount >= 500 && t.amount < 1000).length },
-    { range: "₦1000+", count: topUps.filter((t) => t.amount >= 1000).length },
-  ];
+  // Note: TopUpDistribution type expects amount, count, percentage. Adjusting generation.
+  const topUpDistributionRaw: { [key: number]: number } = {};
+  topUps.forEach(t => {
+    topUpDistributionRaw[t.amount] = (topUpDistributionRaw[t.amount] || 0) + 1;
+  });
+  const topUpDistribution: TopUpDistribution[] = Object.entries(topUpDistributionRaw).map(([amountStr, count]) => {
+    const amount = parseInt(amountStr, 10);
+    return {
+      amount: amount,
+      count: count,
+      percentage: (count / topUps.length) * 100,
+    };
+  });
 
   // Generate Revenue Trend Data conforming to RevenueTrend type
+  // Note: RevenueTrend type expects date, amount. Adjusting generation.
   const revenueTrend: RevenueTrend[] = [];
   let dailyRevenue = 0;
   for (let i = 30; i >= 0; i--) {
@@ -409,7 +415,7 @@ export const generateDemoData = (): DemoDataType => {
     dailyRevenue = topUps
       .filter((t) => t.date.startsWith(date))
       .reduce((sum, t) => sum + t.amount, 0);
-    revenueTrend.push({ date, revenue: dailyRevenue });
+    revenueTrend.push({ date, amount: dailyRevenue }); // Use 'amount' based on type def
   }
 
   // Generate Segments conforming to Segment type
