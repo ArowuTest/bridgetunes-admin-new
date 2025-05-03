@@ -1,42 +1,24 @@
 // /home/ubuntu/bridgetunes-admin-new/src/services/auth.service.ts
+import { LoginCredentials, AuthResponse } from "../types/auth.types"; // Import central types
 
 // Define the base URL for the API (consistent with other services)
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
-const AUTH_TOKEN_KEY = 'authToken'; // Key for storing token in localStorage
-
-// Define user interface (can be partial from backend)
-interface PartialUser {
-  id?: string;
-  username?: string;
-  email?: string;
-  role?: 'admin' | 'manager' | 'viewer';
-  name?: string;
-}
-
-interface LoginResponse {
-  token: string;
-  user?: PartialUser; // User data from backend might be partial
-}
-
-interface LoginCredentials {
-  email: string; // Assuming email is used for login
-  password?: string; // Password might be optional if using other methods
-}
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api/v1";
+const AUTH_TOKEN_KEY = "authToken"; // Key for storing token in localStorage
 
 /**
  * Logs in the user by calling the backend API.
  * Stores the received token in localStorage.
  * @param credentials User credentials (e.g., email, password).
- * @returns The login response from the backend (including token and potentially partial user info).
+ * @returns The login response from the backend (including token and user data).
  * @throws Error if login fails.
  */
-export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
+export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
   console.log(`Attempting login for ${credentials.email}...`);
   try {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(credentials),
     });
@@ -48,24 +30,27 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
       } catch (e) {
         // Ignore if response is not JSON
       }
+      // Use the error message from backend if available, otherwise use status text
       const errorMessage = errorData?.error || `Login failed: ${response.statusText} (Status: ${response.status})`;
-      console.error('Login API Error:', errorMessage, errorData);
+      console.error("Login API Error:", errorMessage, errorData);
       throw new Error(errorMessage);
     }
 
-    const data: LoginResponse = await response.json();
+    // Expect the response to match the AuthResponse interface from auth.types.ts
+    const data: AuthResponse = await response.json();
 
     if (data.token) {
       localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-      console.log('Login successful, token stored.');
-      return data; // Return the full response including token and user data
+      console.log("Login successful, token stored.");
+      // Return the full response which should include token and user object
+      return data;
     } else {
-      console.error('Login response did not contain a token.');
-      throw new Error('Login failed: No token received from server.');
+      console.error("Login response did not contain a token.");
+      throw new Error("Login failed: No token received from server.");
     }
   } catch (error) {
-    console.error('Error during login:', error);
-    // Re-throw the error so the calling component can handle it
+    console.error("Error during login:", error);
+    // Re-throw the error so the calling component/context can handle it
     throw error;
   }
 }
@@ -75,9 +60,7 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
  * @returns The authentication token string or null if not found.
  */
 export function getAuthToken(): string | null {
-  const token = localStorage.getItem(AUTH_TOKEN_KEY);
-  // console.log(`getAuthToken called, token found: ${!!token}`); // Optional: for debugging
-  return token;
+  return localStorage.getItem(AUTH_TOKEN_KEY);
 }
 
 /**
@@ -85,9 +68,7 @@ export function getAuthToken(): string | null {
  */
 export function logout(): void {
   localStorage.removeItem(AUTH_TOKEN_KEY);
-  console.log('Logged out, token removed.');
-  // Optionally, redirect the user to the login page or refresh the page
-  // window.location.href = '/login';
+  console.log("Logged out, token removed.");
 }
 
 /**
@@ -97,5 +78,6 @@ export function logout(): void {
 export function isLoggedIn(): boolean {
   return !!getAuthToken();
 }
+
 
 
