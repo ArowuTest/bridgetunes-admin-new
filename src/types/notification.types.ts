@@ -21,6 +21,7 @@ export interface NotificationStatus {
 export interface Notification {
   id: string;
   msisdn: string; // Added missing property
+  templateId?: string; // Added missing optional property
   title: string;
   message: string;
   type: string;
@@ -80,5 +81,6 @@ export interface Segment {
   createdAt?: string;
   updatedAt?: string;
 }
+
 
 
