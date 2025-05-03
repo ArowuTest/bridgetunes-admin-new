@@ -43,23 +43,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Check for existing auth on mount
   useEffect(() => {
     const checkAuth = () => {
-      // Use the consistent key to check for token
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const savedUser = localStorage.getItem(USER_KEY);
 
       if (token && savedUser) {
         try {
           const parsedUser = JSON.parse(savedUser);
-          setIsAuthenticated(true);
-          setUser(parsedUser);
+          // Basic check to ensure parsedUser looks like a User object
+          if (parsedUser && typeof parsedUser === 'object' && parsedUser.id && parsedUser.email) {
+            setIsAuthenticated(true);
+            setUser(parsedUser as User); // Assume it matches User type for now
+          } else {
+            throw new Error("Parsed user data is invalid");
+          }
         } catch (e) {
-          console.error("Failed to parse user data from localStorage", e);
-          // Clear invalid data if parsing fails
+          console.error("Failed to parse or validate user data from localStorage", e);
           localStorage.removeItem(AUTH_TOKEN_KEY);
           localStorage.removeItem(USER_KEY);
+          setIsAuthenticated(false);
+          setUser(null);
         }
       } else {
-        // Ensure state is cleared if no token/user found
         setIsAuthenticated(false);
         setUser(null);
       }
@@ -77,14 +81,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return new Promise((resolve) => {
           setTimeout(() => {
             if (email === 'admin@bridgetunes.com' && password === 'admin123') {
-              const demoUser = {
+              const demoUser: User = {
                 id: 'demo-1',
                 username: 'admin',
                 email: 'admin@bridgetunes.com',
                 role: 'admin' as const,
                 name: 'Demo Admin'
               };
-              // Use the consistent key to save token
               localStorage.setItem(AUTH_TOKEN_KEY, 'demo-token-123');
               localStorage.setItem(USER_KEY, JSON.stringify(demoUser));
               setIsAuthenticated(true);
@@ -102,16 +105,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Use the imported apiLogin function from auth.service.ts
         const loginResponse = await apiLogin({ email, password });
         if (loginResponse.token) {
-          // Token is already saved by apiLogin, just update state
-          const apiUser = loginResponse.user || { id: 'unknown', username: email, email: email, role: 'admin', name: 'Admin User' }; // Use backend user data if available
-          // Save user data separately if needed (apiLogin only saves token)
+          // Construct a complete User object, providing defaults if necessary
+          const backendUser = loginResponse.user;
+          const apiUser: User = {
+            id: backendUser?.id || 'unknown-id',
+            username: backendUser?.username || email, // Use email as fallback username
+            email: backendUser?.email || email,
+            role: backendUser?.role || 'admin', // Default role if missing
+            name: backendUser?.name || 'Admin User' // Default name if missing
+          };
+
+          // Ensure the constructed object matches the User interface before setting state
           localStorage.setItem(USER_KEY, JSON.stringify(apiUser));
           setIsAuthenticated(true);
-          setUser(apiUser);
+          setUser(apiUser); // Now apiUser is guaranteed to match the User type
           setIsLoading(false);
           return true;
         } else {
-          // This case should ideally be handled within apiLogin's error throwing
           setError('Login failed: No token received.');
           setIsLoading(false);
           return false;
@@ -126,8 +136,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = (): void => {
-    apiLogout(); // Use the imported logout function which clears the correct token key
-    localStorage.removeItem(USER_KEY); // Also clear user data
+    apiLogout();
+    localStorage.removeItem(USER_KEY);
     setIsAuthenticated(false);
     setUser(null);
     navigate('/login');
@@ -137,10 +147,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      // In a real implementation, this would call an API
       return new Promise((resolve) => {
         setTimeout(() => {
-          // Simulate successful password reset request
           setIsLoading(false);
           resolve(true);
         }, 1000);
@@ -166,5 +174,6 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+
 
 
