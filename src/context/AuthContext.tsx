@@ -125,7 +125,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           id: backendUser.id ?? "unknown-id",
           username: backendUser.username ?? email,
           email: backendUser.email ?? email,
-          role: (backendUser.role && ["admin", "manager", "viewer"].includes(backendUser.role.toLowerCase())) ? backendUser.role.toLowerCase() : "admin", // Normalize to lowercase
+          role: (backendUser.role && ["admin", "manager", "viewer"].includes(backendUser.role.toLowerCase())) 
+            ? backendUser.role.toLowerCase() as "admin" | "manager" | "viewer" // Assert type
+            : "admin", // Default role if validation fails
           name: backendUser.name ?? backendUser.username ?? "User", // Add fallback for name
           createdAt: backendUser.createdAt ?? new Date().toISOString(),
           updatedAt: backendUser.updatedAt ?? new Date().toISOString(),
