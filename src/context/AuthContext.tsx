@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDemoMode } from './DemoModeContext';
-import { login as apiLogin, logout as apiLogout, getAuthToken, isLoggedIn } from '../services/auth.service'; // Import auth functions
+// Import auth functions and the PartialUser interface
+import { login as apiLogin, logout as apiLogout, getAuthToken, isLoggedIn, PartialUser } from '../services/auth.service';
 
-// Define user interface
+// Define the full User interface expected by the frontend context/components
 interface User {
   id: string;
   username: string;
@@ -24,9 +25,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Use the same key as defined in auth.service.ts
 const AUTH_TOKEN_KEY = 'authToken';
-const USER_KEY = 'bridgetunes_user'; // Keep user key as is for now, or unify if needed later
+const USER_KEY = 'bridgetunes_user';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -40,21 +40,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { isDemoMode } = useDemoMode();
   const navigate = useNavigate();
 
-  // Check for existing auth on mount
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const savedUser = localStorage.getItem(USER_KEY);
-
       if (token && savedUser) {
         try {
           const parsedUser = JSON.parse(savedUser);
-          // Basic check to ensure parsedUser looks like a User object
-          if (parsedUser && typeof parsedUser === 'object' && parsedUser.id && parsedUser.email) {
+          // Validate the parsed user object more thoroughly
+          if (parsedUser && typeof parsedUser === 'object' &&
+              typeof parsedUser.id === 'string' &&
+              typeof parsedUser.username === 'string' &&
+              typeof parsedUser.email === 'string' &&
+              typeof parsedUser.role === 'string' &&
+              typeof parsedUser.name === 'string') {
             setIsAuthenticated(true);
-            setUser(parsedUser as User); // Assume it matches User type for now
+            setUser(parsedUser as User);
           } else {
-            throw new Error("Parsed user data is invalid");
+            throw new Error("Parsed user data does not match User interface");
           }
         } catch (e) {
           console.error("Failed to parse or validate user data from localStorage", e);
@@ -77,7 +80,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
     try {
       if (isDemoMode) {
-        // Demo mode login logic (remains unchanged)
+        // Demo mode login logic
         return new Promise((resolve) => {
           setTimeout(() => {
             if (email === 'admin@bridgetunes.com' && password === 'admin123') {
@@ -102,26 +105,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }, 800);
         });
       } else {
-        // Use the imported apiLogin function from auth.service.ts
+        // Real API login
         const loginResponse = await apiLogin({ email, password });
         if (loginResponse.token) {
-          // Construct a complete User object, providing defaults if necessary
-          const backendUser = loginResponse.user;
+          const backendUser: PartialUser | undefined = loginResponse.user;
+
+          // **Robustly construct the full User object with defaults**
           const apiUser: User = {
-            id: backendUser?.id || 'unknown-id',
-            username: backendUser?.username || email, // Use email as fallback username
-            email: backendUser?.email || email,
-            role: backendUser?.role || 'admin', // Default role if missing
-            name: backendUser?.name || 'Admin User' // Default name if missing
+            id: backendUser?.id ?? 'unknown-id',
+            username: backendUser?.username ?? email, // Fallback to email if username missing
+            email: backendUser?.email ?? email, // Ensure email is always present
+            // Ensure role is one of the allowed values, default to 'viewer' or 'admin' if invalid/missing
+            role: (backendUser?.role && ['admin', 'manager', 'viewer'].includes(backendUser.role)) ? backendUser.role : 'admin',
+            name: backendUser?.name ?? 'User' // Fallback name
           };
 
-          // Ensure the constructed object matches the User interface before setting state
           localStorage.setItem(USER_KEY, JSON.stringify(apiUser));
           setIsAuthenticated(true);
-          setUser(apiUser); // Now apiUser is guaranteed to match the User type
+          setUser(apiUser); // Set the guaranteed complete User object
           setIsLoading(false);
           return true;
         } else {
+          // Should be caught by apiLogin error handling, but as a fallback:
           setError('Login failed: No token received.');
           setIsLoading(false);
           return false;
@@ -143,6 +148,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     navigate('/login');
   };
 
+  // resetPassword function remains the same...
   const resetPassword = async (email: string): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
