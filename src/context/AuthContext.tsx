@@ -51,13 +51,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             typeof savedUser.id === "string" &&
             typeof savedUser.username === "string" &&
             typeof savedUser.email === "string" &&
-            typeof savedUser.role === "string" &&
+            typeof savedUser.role === "string" && // Role exists
             typeof savedUser.name === "string" && // Check for name
             typeof savedUser.createdAt === "string" &&
             typeof savedUser.updatedAt === "string"
           ) {
+            // Normalize role from localStorage to lowercase for consistency
+            const normalizedUser = { ...savedUser, role: savedUser.role.toLowerCase() };
             setIsAuthenticated(true);
-            setUser(savedUser as User);
+            setUser(normalizedUser as User);
           } else {
             throw new Error("Saved user data does not match expected User structure.");
           }
@@ -123,7 +125,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           id: backendUser.id ?? "unknown-id",
           username: backendUser.username ?? email,
           email: backendUser.email ?? email,
-          role: (backendUser.role && ["admin", "manager", "viewer"].includes(backendUser.role)) ? backendUser.role : "admin",
+          role: (backendUser.role && ["admin", "manager", "viewer"].includes(backendUser.role.toLowerCase())) ? backendUser.role.toLowerCase() : "admin", // Normalize to lowercase
           name: backendUser.name ?? backendUser.username ?? "User", // Add fallback for name
           createdAt: backendUser.createdAt ?? new Date().toISOString(),
           updatedAt: backendUser.updatedAt ?? new Date().toISOString(),
@@ -196,6 +198,7 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+
 
 
 
