@@ -178,7 +178,8 @@ const Login: React.FC = () => {
     
     try {
       await login(email, password);
-      navigate('/dashboard');
+      // navigate("/dashboard"); // Use window.location instead
+      window.location.href = "/dashboard";
     } catch (error) {
       setErrors({
         general: 'Invalid email or password'
@@ -193,7 +194,8 @@ const Login: React.FC = () => {
     
     try {
       await login('demo@example.com', 'password');
-      navigate('/dashboard');
+      // navigate('/dashboard'); // Use window.location instead
+      window.location.href = '/dashboard';
     } catch (error) {
       setErrors({
         general: 'Demo login failed'
