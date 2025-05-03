@@ -6,9 +6,9 @@ export interface CSVData {
 
 export interface CSVUploadResponse {
   id: string;
-  filename: string;
-  uploadedAt: string;
-  status: 'processing' | 'completed' | 'failed';
+  fileName: string; // Changed from filename
+  uploadDate: string; // Changed from uploadedAt
+  status: 'processing' | 'completed' | 'failed' | 'processed'; // Added 'processed'
   summary: CSVUploadSummary;
 }
 
@@ -19,13 +19,17 @@ export interface CSVUploadStats {
   lastUpload: string | null;
 }
 
+// Updated to match demoDataGenerator structure and include 'processed' status
 export interface CSVUploadHistory {
   id: string;
-  filename: string;
-  uploadedAt: string;
-  status: 'processing' | 'completed' | 'failed';
+  fileName: string; // Changed from filename
+  uploadDate: string; // Changed from uploadedAt
+  status: 'processing' | 'completed' | 'failed' | 'processed'; // Added 'processed'
   recordCount: number;
-  totalAmount: number;
+  processedCount?: number; // Added from demo data (optional)
+  errorCount?: number; // Added from demo data (optional)
+  uploadedBy?: string; // Added from demo data (optional)
+  // Removed totalAmount as it wasn't in demo data
 }
 
 export interface CSVUploadSummary {
@@ -34,3 +38,5 @@ export interface CSVUploadSummary {
   invalidRecords: number;
   totalAmount: number;
 }
+
+
