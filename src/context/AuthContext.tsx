@@ -94,11 +94,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             name: "Demo Admin", // Include name for demo user
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            // Add optional fields if needed for demo, otherwise they can be omitted or undefined
+            status: "active",
+            lastLogin: new Date().toISOString(),
           };
+          // Corrected: Remove 'success' property to match AuthResponse type
           loginResponse = {
-            success: true,
             token: "demo-token-123",
-            user: demoUser, // Backend response uses Partial<User>
+            user: demoUser, // Note: Backend might return Partial<User>, handled below
           };
           localStorage.setItem(AUTH_TOKEN_KEY, loginResponse.token);
         } else {
@@ -113,7 +116,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Process the response (token is already saved by apiLogin for non-demo)
       if (loginResponse.token && loginResponse.user) {
-        const backendUser = loginResponse.user; // This is Partial<User>
+        const backendUser = loginResponse.user; // This is potentially Partial<User>
 
         // Construct the full User object for the context state, providing defaults
         const validatedUser: User = {
@@ -124,6 +127,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           name: backendUser.name ?? backendUser.username ?? "User", // Add fallback for name
           createdAt: backendUser.createdAt ?? new Date().toISOString(),
           updatedAt: backendUser.updatedAt ?? new Date().toISOString(),
+          // Handle optional fields safely
+          status: backendUser.status,
+          lastLogin: backendUser.lastLogin,
         };
 
         localStorage.setItem(USER_KEY, JSON.stringify(validatedUser)); // Save the validated user
@@ -133,7 +139,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return true;
       } else {
         // Handle cases where login response is not successful or missing data
-        setError(loginResponse.message || "Login failed: Invalid response from server.");
+        // Use optional chaining for message if loginResponse itself might be problematic
+        setError(loginResponse?.message || "Login failed: Invalid response from server.");
         setIsLoading(false);
         return false;
       }
@@ -162,6 +169,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
+      // Replace with actual API call if needed
       return new Promise((resolve) => {
         setTimeout(() => {
           setIsLoading(false);
@@ -189,9 +197,6 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
-
-
 
 
 
