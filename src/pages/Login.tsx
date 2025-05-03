@@ -178,8 +178,9 @@ const Login: React.FC = () => {
     
     try {
       await login(email, password);
-      // navigate("/dashboard"); // Use window.location instead
+      console.log("Login successful, attempting redirect..."); // Added log
       window.location.href = "/dashboard";
+      console.log("Redirect command executed."); // Added log
     } catch (error) {
       setErrors({
         general: 'Invalid email or password'
