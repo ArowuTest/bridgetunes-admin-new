@@ -4,14 +4,18 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
 const AUTH_TOKEN_KEY = 'authToken'; // Key for storing token in localStorage
 
+// Define user interface (can be partial from backend)
+interface PartialUser {
+  id?: string;
+  username?: string;
+  email?: string;
+  role?: 'admin' | 'manager' | 'viewer';
+  name?: string;
+}
+
 interface LoginResponse {
   token: string;
-  // Add other user details if the backend returns them
-  user?: {
-    id: string;
-    name: string;
-    // Add other user fields
-  };
+  user?: PartialUser; // User data from backend might be partial
 }
 
 interface LoginCredentials {
@@ -23,7 +27,7 @@ interface LoginCredentials {
  * Logs in the user by calling the backend API.
  * Stores the received token in localStorage.
  * @param credentials User credentials (e.g., email, password).
- * @returns The login response from the backend (including token and user info).
+ * @returns The login response from the backend (including token and potentially partial user info).
  * @throws Error if login fails.
  */
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
@@ -54,7 +58,7 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
     if (data.token) {
       localStorage.setItem(AUTH_TOKEN_KEY, data.token);
       console.log('Login successful, token stored.');
-      return data;
+      return data; // Return the full response including token and user data
     } else {
       console.error('Login response did not contain a token.');
       throw new Error('Login failed: No token received from server.');
@@ -93,4 +97,5 @@ export function logout(): void {
 export function isLoggedIn(): boolean {
   return !!getAuthToken();
 }
+
 
