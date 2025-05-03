@@ -175,15 +175,15 @@ const Login: React.FC = () => {
     }
     
     setIsLoading(true);
-    
+    setErrors({}); // Clear previous errors
+
     try {
-      await login(email, password);
-      console.log("Login successful, attempting redirect..."); // Added log
-      window.location.href = "/dashboard";
-      console.log("Redirect command executed."); // Added log
-    } catch (error) {
+      await login(email, password); // Calls AuthContext's login, which handles navigation on success
+      // If login succeeds, AuthContext will navigate. If it fails, it throws an error.
+    } catch (error: any) { // Catch any rejection from await login()
+      console.error("Error caught in Login.tsx handleSubmit:", error); // Keep this log for now
       setErrors({
-        general: 'Invalid email or password'
+        general: error.message || 'An unexpected error occurred during login.'
       });
     } finally {
       setIsLoading(false);
@@ -192,14 +192,15 @@ const Login: React.FC = () => {
 
   const handleDemoLogin = async () => {
     setIsLoading(true);
-    
+    setErrors({}); // Clear previous errors
+
     try {
-      await login('demo@example.com', 'password');
-      // navigate('/dashboard'); // Use window.location instead
-      window.location.href = '/dashboard';
-    } catch (error) {
+      await login("demo@example.com", "password"); // AuthContext handles navigation on success
+      // If login succeeds, AuthContext will navigate. If it fails, it throws an error.
+    } catch (error: any) {
+      console.error("Error caught in Login.tsx handleDemoLogin:", error); // Keep log for demo
       setErrors({
-        general: 'Demo login failed'
+        general: error.message || "Demo login failed"
       });
     } finally {
       setIsLoading(false);
@@ -297,4 +298,5 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+
 
