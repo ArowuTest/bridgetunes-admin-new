@@ -127,9 +127,16 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{email?: string; password?: string; general?: string}>({});
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth(); // Get isAuthenticated state
   const { isDemoMode } = useDemoMode();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     // Clear errors when inputs change
@@ -287,3 +294,4 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+
