@@ -28,6 +28,7 @@ export interface Notification {
   channel: string;
   status: string;
   createdAt: string;
+  updatedAt?: string; // Added missing optional property
   scheduledFor?: string;
   sentAt?: string;
   recipients: number; // Note: This seems redundant if msisdn is present, might need review
