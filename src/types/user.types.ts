@@ -1,26 +1,22 @@
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: 'admin' | 'manager' | 'viewer';
-  status: 'active' | 'inactive' | 'pending';
-  lastLogin?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// /home/ubuntu/bridgetunes-admin-new/src/types/user.types.ts
+
+// NOTE: The main User interface is now defined in ./auth.types.ts
+// This file contains types specific to user management actions.
 
 export interface UserCreationParams {
   username: string;
   email: string;
   password: string;
-  role: 'admin' | 'manager' | 'viewer';
+  role: "admin" | "manager" | "viewer";
+  name: string; // Ensure name is included for creation if needed by backend
 }
 
 export interface UserUpdateParams {
   username?: string;
   email?: string;
-  role?: 'admin' | 'manager' | 'viewer';
-  status?: 'active' | 'inactive';
+  role?: "admin" | "manager" | "viewer";
+  status?: "active" | "inactive";
+  name?: string; // Allow updating name
 }
 
 export interface PasswordChangeParams {
@@ -51,3 +47,4 @@ export interface UserStats {
   managerCount: number;
   viewerCount: number;
 }
+
