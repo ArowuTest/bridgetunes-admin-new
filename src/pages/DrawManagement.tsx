@@ -687,7 +687,7 @@ const DrawManagement: React.FC = () => {
           <ModalOverlay onClick={() => setIsDetailModalOpen(false)}>
             <ModalContent onClick={(e) => e.stopPropagation()}>
               <ModalHeader>Draw Details - {new Date(selectedDraw.drawDate).toLocaleDateString()}</ModalHeader>
-              <p><strong>ID:</strong> {selectedDraw._id}</p>
+              <p><strong>ID:</strong> {selectedDraw.id}</p>
               <p><strong>Type:</strong> {selectedDraw.drawType}</p>
               <p><strong>Status:</strong> <StatusBadge status={selectedDraw.status}>{selectedDraw.status}</StatusBadge></p>
               <p><strong>Eligible Digits:</strong> {selectedDraw.eligibleDigits}</p>
@@ -714,7 +714,7 @@ const DrawManagement: React.FC = () => {
               {selectedDraw.winners && selectedDraw.winners.length > 0 ? (
                 <WinnerList>
                   {selectedDraw.winners.map(winner => (
-                    <WinnerItem key={winner._id}>
+                    <WinnerItem key={winner.id}>
                       {winner.prizeCategory.toUpperCase()}: {maskMsisdn(winner.msisdn)} - ₦{winner.prizeAmount.toLocaleString()} ({winner.claimStatus})
                     </WinnerItem>
                   ))}
