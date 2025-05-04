@@ -11,10 +11,10 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 // --- Mock Data (For Demo Mode) ---
 const MOCK_WINNERS: Winner[] = [
-  { _id: 'win1', msisdn: '2348031234567', prizeCategory: 'jackpot', prizeAmount: 1000000, drawId: 'draw1', drawDate: new Date('2024-05-01T10:00:00Z'), claimStatus: 'Pending', createdAt: new Date() },
-  { _id: 'win2', msisdn: '2348037654321', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', drawDate: new Date('2024-05-01T10:00:00Z'), claimStatus: 'Paid', createdAt: new Date() },
-  { _id: 'win3', msisdn: '2349098765432', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', drawDate: new Date('2024-05-01T10:00:00Z'), claimStatus: 'Pending', createdAt: new Date() },
-  { _id: 'win4', msisdn: '2347061112222', prizeCategory: 'jackpot', prizeAmount: 5000000, drawId: 'draw3', drawDate: new Date('2024-05-04T10:00:00Z'), claimStatus: 'Failed', createdAt: new Date() }, // Example Saturday winner
+  { id: 'win1', msisdn: '2348031234567', prizeCategory: 'jackpot', prizeAmount: 1000000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Pending', createdAt: new Date().toISOString() },
+  { id: 'win2', msisdn: '2348037654321', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Paid', createdAt: new Date().toISOString() },
+  { id: 'win3', msisdn: '2349098765432', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Pending', createdAt: new Date().toISOString() },
+  { id: 'win4', msisdn: '2347061112222', prizeCategory: 'jackpot', prizeAmount: 5000000, drawId: 'draw3', winDate: new Date('2024-05-04T10:00:00Z').toISOString(), claimStatus: 'Failed', createdAt: new Date().toISOString() }, // Example Saturday winner
 ];
 
 // --- Styled Components (reuse or adapt from DrawManagement) ---
@@ -329,4 +329,6 @@ const WinnerManagement: React.FC = () => {
 };
 
 export default WinnerManagement;
+
+
 
