@@ -612,7 +612,7 @@ const DrawManagement: React.FC = () => {
 
   // --- Render --- 
   return (
-    <PageLayout>
+    <PageLayout title="Draw Management">
       <Container>
         <Header>
           <Title>Draw Management</Title>
@@ -813,7 +813,6 @@ const DrawManagement: React.FC = () => {
 };
 
 export default DrawManagement;
-
 
 
 
