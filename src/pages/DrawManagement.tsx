@@ -7,7 +7,7 @@ import { ToastContainer, toast } from "react-toastify"; // Import toast
 import "react-toastify/dist/ReactToastify.css"; // Import toast styles
 import { PageLayout } from "../components/PageLayout";
 import { Button } from "../components/Button";
-import { Modal } from "../components/Modal"; // Assuming a Modal component exists
+import Modal from "../components/Modal"; // Assuming Modal.tsx is placed in src/components/
 import { StatusBadge } from "../components/StatusBadge"; // Assuming a StatusBadge component exists
 import { getDraws, executeDraw, scheduleDraw, getPrizeStructure, updatePrizeStructure } from "../services/draw.service"; // Assuming these API functions exist
 import { Draw, PrizeStructure, Winner } from "../types/draw.types"; // Assuming these types exist
