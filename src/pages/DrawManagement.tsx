@@ -521,16 +521,16 @@ const DrawManagement: React.FC = () => {
         console.log("Demo Mode: Simulating schedule draw", payload);
         await new Promise(resolve => setTimeout(resolve, 1000));
         const newDraw: Draw = {
-          _id: `mock_draw_${Date.now()}`,
+          id: `mock_draw_${Date.now()}`, // Use id instead of _id
           drawDate: new Date(scheduleDate + 'T10:00:00Z').toISOString(), // Store as string
           drawType: scheduleType as 'daily' | 'saturday',
           status: 'scheduled',
-          eligibleDigits: scheduleUseDefault ? 'DEFAULT' : scheduleDigits,
+          eligibleDigits: scheduleUseDefault ? [] : scheduleDigits.split(",").map(d => parseInt(d.trim())).filter(n => !isNaN(n)), // Parse string to number[] or send empty array for default
           jackpotAmount: scheduleType === 'daily' ? 1000000 : 5000000,
           rolloverAmount: 0,
           winners: [],
           participantsPoolA: 0,
-          participantsPoolB: 0,
+          useDefault: scheduleUseDefault, // Added missing field
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
