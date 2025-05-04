@@ -35,7 +35,7 @@ const MOCK_DRAWS: Draw[] = [
     drawDate: '2024-05-01T10:00:00.000Z', // Corrected to string
     drawType: 'daily',
     status: 'completed',
-    eligibleDigits: '1,2,3',
+    eligibleDigits: [1, 2, 3],
     jackpotAmount: 1000000,
     rolloverAmount: 0,
     winners: [
@@ -56,7 +56,7 @@ const MOCK_DRAWS: Draw[] = [
     drawDate: '2024-05-02T10:00:00.000Z', // Corrected to string
     drawType: 'daily',
     status: 'scheduled',
-    eligibleDigits: '4,5,6',
+    eligibleDigits: [4, 5, 6],
     jackpotAmount: 1000000,
     rolloverAmount: 0,
     winners: [],
@@ -70,7 +70,7 @@ const MOCK_DRAWS: Draw[] = [
     drawDate: '2024-05-04T10:00:00.000Z', // Corrected to string
     drawType: 'saturday',
     status: 'scheduled',
-    eligibleDigits: '7,8,9',
+    eligibleDigits: [7, 8, 9],
     jackpotAmount: 5000000,
     rolloverAmount: 150000, // Example rollover
     winners: [],
@@ -810,7 +810,5 @@ const DrawManagement: React.FC = () => {
 };
 
 export default DrawManagement;
-
-
 
 
