@@ -276,7 +276,7 @@ const WinnerManagement: React.FC = () => {
                     <Td>{winner.msisdn}</Td>
                     <Td>{winner.prizeCategory}</Td>
                     <Td>{formatCurrency(winner.prizeAmount)}</Td>
-                    <Td><StatusBadge status={winner.claimStatus}>{winner.claimStatus}</StatusBadge></Td>
+                    <Td><StatusBadge status={winner.claimStatus || ''}>{winner.claimStatus || 'N/A'}</StatusBadge></Td>
                     <Td>
                       {winner.claimStatus === 'Pending' && (
                         <>
