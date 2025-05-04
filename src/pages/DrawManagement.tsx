@@ -89,7 +89,7 @@ const formatPrizeStructureForUI = (prizes: Prize[]) => {
   const uiStructure: any = {};
   prizes.forEach(prize => {
     if (prize.category === 'consolation') {
-      uiStructure[prize.category] = `₦${prize.amount.toLocaleString()} x ${prize.numWinners || 1} winners`; // Use numWinners
+      uiStructure[prize.category] = `₦${prize.amount.toLocaleString()} x ${prize.count || 1} winners`; // Use count (reverted)
     } else if (prize.category === 'jackpot' || prize.category === 'second' || prize.category === 'third') {
       uiStructure[prize.category] = `₦${prize.amount.toLocaleString()}`;
     }
@@ -107,13 +107,13 @@ const formatPrizeStructureForAPI = (uiStructure: any, drawType: 'daily' | 'satur
   const parseAmount = (value: string | undefined): number => parseInt(value?.replace(/[^0-9]/g, '') || '0');
 
   if (uiStructure.jackpot) {
-    prizes.push({ category: 'jackpot', amount: parseAmount(uiStructure.jackpot), numWinners: 1 }); // Use numWinners
+    prizes.push({ category: 'jackpot', amount: parseAmount(uiStructure.jackpot), count: 1 }); // Use count (reverted)
   }
   if (uiStructure.second) {
-    prizes.push({ category: 'second', amount: parseAmount(uiStructure.second), numWinners: 1 }); // Use numWinners
+    prizes.push({ category: 'second', amount: parseAmount(uiStructure.second), count: 1 }); // Use count (reverted)
   }
   if (uiStructure.third) {
-    prizes.push({ category: 'third', amount: parseAmount(uiStructure.third), numWinners: 1 }); // Use numWinners
+    prizes.push({ category: 'third', amount: parseAmount(uiStructure.third), count: 1 }); // Use count (reverted)
   }
   if (uiStructure.consolation) {
     const amountMatch = uiStructure.consolation.match(/₦([0-9,]+)/)?.[1];
@@ -121,11 +121,11 @@ const formatPrizeStructureForAPI = (uiStructure: any, drawType: 'daily' | 'satur
     prizes.push({
       category: 'consolation',
       amount: parseAmount(amountMatch),
-      numWinners: parseInt(countMatch || '0') // Use numWinners
+      count: parseInt(countMatch || '0') // Use count (reverted)
     });
   }
 
-  return prizes.filter(p => p.amount > 0 && p.numWinners && p.numWinners > 0); // Filter out invalid entries, use numWinners
+  return prizes.filter(p => p.amount > 0 && p.count && p.count > 0); // Filter out invalid entries, use count (reverted)
 };
 
 // Helper function to mask MSISDN (e.g., 234803****567)
@@ -594,7 +594,7 @@ const DrawManagement: React.FC = () => {
         } : null);
       } else {
         console.log(`Updating prize structure for ${editingPrizeType} via API...`, apiPayload);
-        await drawService.updatePrizeStructure(editingPrizeType, apiPayload);
+        await drawService.updatePrizeStructure({ drawType: editingPrizeType, prizes: apiPayload }); // Correct signature: pass single object
         await fetchPrizeStructures(); // Re-fetch to confirm
       }
       alert('Prize structure updated successfully!');
@@ -813,7 +813,4 @@ const DrawManagement: React.FC = () => {
 };
 
 export default DrawManagement;
-
-
-
 
