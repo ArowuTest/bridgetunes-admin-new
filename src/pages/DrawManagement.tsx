@@ -660,7 +660,7 @@ const DrawManagement: React.FC = () => {
               </thead>
               <tbody>
                 {filteredDraws.map((draw) => (
-                  <Tr key={draw._id}>
+                  <Tr key={draw.id}>
                     <Td>{new Date(draw.drawDate).toLocaleString()}</Td>
                     <Td>{draw.drawType}</Td>
                     <Td><StatusBadge status={draw.status}>{draw.status}</StatusBadge></Td>
@@ -813,5 +813,6 @@ const DrawManagement: React.FC = () => {
 };
 
 export default DrawManagement;
+
 
 
