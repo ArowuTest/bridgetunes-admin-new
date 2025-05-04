@@ -361,7 +361,7 @@ const DrawManagement: React.FC = () => {
           updatedAt: typeof draw.updatedAt === 'object' ? (draw.updatedAt as Date).toISOString() : draw.updatedAt,
           winners: draw.winners?.map(winner => ({
             ...winner,
-            drawDate: typeof winner.drawDate === 'object' ? (winner.drawDate as Date).toISOString() : winner.drawDate,
+            winDate: typeof winner.winDate === 'object' ? (winner.winDate as Date).toISOString() : winner.winDate, // Use winDate
             createdAt: typeof winner.createdAt === 'object' ? (winner.createdAt as Date).toISOString() : winner.createdAt,
           }))
         }));
