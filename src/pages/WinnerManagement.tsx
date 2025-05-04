@@ -248,7 +248,7 @@ const WinnerManagement: React.FC = () => {
               <option value="Paid">Paid</option>
               <option value="Failed">Failed</option>
             </Select>
-            <Button onClick={handleClearFilters} icon={<FaFilter />} secondary>Clear Filters</Button>
+            <Button onClick={handleClearFilters} icon={<FaFilter />} variant="secondary">Clear Filters</Button>
           </Controls>
         </Card>
 
@@ -281,20 +281,20 @@ const WinnerManagement: React.FC = () => {
                       {winner.claimStatus === 'Pending' && (
                         <>
                           <ActionButton
-                            onClick={() => handleUpdateStatus(winner._id, 'Paid')}
+                            onClick={() => handleUpdateStatus(winner.id, 'Paid')}
                             icon={<FaCheck />}
                             disabled={isLoading}
-                            success
-                            small
+                            variant="success"
+                            size="small"
                           >
                             Mark Paid
                           </ActionButton>
                           <ActionButton
-                            onClick={() => handleUpdateStatus(winner._id, 'Failed')}
+                            onClick={() => handleUpdateStatus(winner.id, 'Failed')}
                             icon={<FaTimes />}
                             disabled={isLoading}
-                            danger
-                            small
+                            variant="danger"
+                            size="small"
                           >
                             Mark Failed
                           </ActionButton>
@@ -302,11 +302,11 @@ const WinnerManagement: React.FC = () => {
                       )}
                        {winner.claimStatus !== 'Pending' && (
                            <ActionButton
-                            onClick={() => handleUpdateStatus(winner._id, 'Pending')}
+                            onClick={() => handleUpdateStatus(winner.id, 'Pending')}
                             icon={<FaTimes />} // Or a different icon like FaUndo
                             disabled={isLoading}
-                            warning // Use warning color for revert
-                            small
+                            variant="warning" // Use warning color for revert
+                            size="small"
                           >
                             Mark Pending
                           </ActionButton>
@@ -329,7 +329,6 @@ const WinnerManagement: React.FC = () => {
 };
 
 export default WinnerManagement;
-
 
 
 
