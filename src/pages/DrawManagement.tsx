@@ -750,8 +750,8 @@ const DrawManagement: React.FC = () => {
                 <label style={{ display: 'flex', alignItems: 'center' }}>
                   Use Default Eligible Digits:
                   <Switch 
-                    checked={scheduleUseDefault} 
-                    onChange={() => setScheduleUseDefault(!scheduleUseDefault)} 
+                    isActive={scheduleUseDefault} 
+                    onToggle={() => setScheduleUseDefault(!scheduleUseDefault)} 
                   />
                 </label>
               </div>
