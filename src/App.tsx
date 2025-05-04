@@ -14,6 +14,7 @@ import DrawManagement from './pages/DrawManagement';
 import UserManagement from './pages/UserManagement';
 import Notifications from './pages/Notifications';
 import CSVUpload from './pages/CSVUpload';
+import WinnerManagement from './pages/WinnerManagement'; // Import the new page
 import { brandColors } from './config/appConfig';
 
 // Define theme
@@ -172,11 +173,20 @@ const AppContent: React.FC = () => {
               <Dashboard />
             </ProtectedRoute>
           } />
+          {/* Corrected path based on original file */}
           <Route path="/draws" element={
             <ProtectedRoute>
               <DrawManagement />
             </ProtectedRoute>
           } />
+          {/* ADDED ROUTE FOR WINNER MANAGEMENT */}
+          <Route path="/winner-management" element={
+            <ProtectedRoute>
+              <WinnerManagement />
+            </ProtectedRoute>
+          } />
+          {/* END ADDED ROUTE */}
+          {/* Corrected path based on original file */}
           <Route path="/users" element={
             <ProtectedRoute>
               <UserManagement />
@@ -187,12 +197,15 @@ const AppContent: React.FC = () => {
               <Notifications />
             </ProtectedRoute>
           } />
+          {/* Corrected path based on original file */}
           <Route path="/csv" element={
             <ProtectedRoute>
               <CSVUpload />
             </ProtectedRoute>
           } />
+          {/* Default route - ensure this is last */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} /> {/* Catch-all */}
         </Routes>
       </Content>
     </AppContainer>
@@ -214,3 +227,5 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+
