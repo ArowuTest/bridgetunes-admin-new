@@ -49,8 +49,9 @@ export interface Prize {
   description?: string;
   category: string;
   amount: number;
-  count?: number; // Number of winners for this prize (reverted)
+  count: number; // Number of winners for this prize (now required)
   winnerId?: string; // ObjectID serialized as string
   isValid?: boolean;
 }
+
 
