@@ -1,4 +1,4 @@
-// Updated Draw interface based on backend model (draw.go)
+// Updated Draw interface based on backend model (draw.go) and frontend needs
 export interface Draw {
   id: string; // Corresponds to _id (ObjectID) serialized as string
   drawDate: string; // Corresponds to DrawDate (time.Time) serialized as ISO string
@@ -10,13 +10,18 @@ export interface Draw {
   optedInParticipants?: number; // Optional
   prizes?: Prize[]; // Optional array of prizes within the draw
   jackpotAmount?: number; // Optional
-  // Removed filterCriteria as it wasn't in the backend model
+  rolloverAmount?: number; // Added based on mock data usage
+  winners?: Winner[]; // Added based on mock data usage
+  participantsPoolA?: number; // Added based on mock data usage
+  participantsPoolB?: number; // Added based on mock data usage
+  executionLog?: string; // Added based on mock data usage
+  jackpotWinnerValidationStatus?: string; // Added based on mock data usage
   createdAt?: string; // Optional
   updatedAt?: string; // Optional
   errorMessage?: string; // Optional
 }
 
-// Updated Winner interface based on backend model (winner.go)
+// Updated Winner interface based on backend model (winner.go) and frontend needs
 export interface Winner {
   id: string; // Corresponds to _id (ObjectID) serialized as string
   msisdn: string;
