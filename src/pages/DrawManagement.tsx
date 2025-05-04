@@ -671,7 +671,7 @@ const DrawManagement: React.FC = () => {
                     <Td>
                       <IconButton onClick={() => handleViewDetails(draw)} title="View Details"><FaTrophy /></IconButton>
                       {draw.status === 'scheduled' && (
-                        <IconButton onClick={() => handleExecuteDraw(draw._id)} title="Execute Draw" disabled={isLoading}><FaPlay /></IconButton>
+                        <IconButton onClick={() => handleExecuteDraw(draw.id)} title="Execute Draw" disabled={isLoading}><FaPlay /></IconButton>
                       )}
                       {/* Add other actions like cancel if needed */}
                     </Td>
