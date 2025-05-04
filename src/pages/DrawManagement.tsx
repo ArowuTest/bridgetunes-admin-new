@@ -476,7 +476,7 @@ const DrawManagement: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 1500));
         // Update mock data, ensuring dates remain strings
         const updatedMockDraws = draws.map(d =>
-          d._id === drawId ? { ...d, status: 'completed', executionLog: 'Demo draw executed successfully.', winners: MOCK_DRAWS[0].winners?.map(w => ({...w, drawDate: '2024-05-01T10:00:00.000Z', createdAt: new Date().toISOString()})) } : d
+          d.id === drawId ? { ...d, status: 'completed', executionLog: 'Demo draw executed successfully.', winners: MOCK_DRAWS[0].winners?.map(w => ({...w, winDate: '2024-05-01T10:00:00.000Z', createdAt: new Date().toISOString()})) } : d // Use d.id and fix winner mapping
         );
         setDraws(updatedMockDraws);
         // Apply filters again if necessary, or just update filteredDraws directly
