@@ -8,7 +8,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import LoadingSpinner from '../components/LoadingSpinner';
 import DrawWheel from '../components/draw/DrawWheel';
-import Switch from '../components/Switch';
+import Switch from './Switch';
 import { Draw, Winner, Prize } from '../types/draw.types'; // Import Prize type
 
 // --- Mock Data (Keep for fallback/initial state if needed) ---
