@@ -31,29 +31,29 @@ const MOCK_PRIZE_STRUCTURES_LEGACY_FORMAT = {
 
 const MOCK_DRAWS: Draw[] = [
     {
-    _id: 'draw1', 
-    drawDate: new Date('2024-05-01T10:00:00Z'),
+    _id: 'draw1',
+    drawDate: '2024-05-01T10:00:00.000Z', // Corrected to string
     drawType: 'daily',
     status: 'completed',
     eligibleDigits: '1,2,3',
     jackpotAmount: 1000000,
     rolloverAmount: 0,
     winners: [
-      { _id: 'win1', msisdn: '2348031234567', prizeCategory: 'jackpot', prizeAmount: 1000000, drawId: 'draw1', drawDate: new Date('2024-05-01T10:00:00Z'), claimStatus: 'Pending', createdAt: new Date() },
-      { _id: 'win2', msisdn: '2348037654321', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', drawDate: new Date('2024-05-01T10:00:00Z'), claimStatus: 'Paid', createdAt: new Date() },
-      { _id: 'win3', msisdn: '2349098765432', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', drawDate: new Date('2024-05-01T10:00:00Z'), claimStatus: 'Pending', createdAt: new Date() }, // Added more winners
+      { _id: 'win1', msisdn: '2348031234567', prizeCategory: 'jackpot', prizeAmount: 1000000, drawId: 'draw1', drawDate: '2024-05-01T10:00:00.000Z', claimStatus: 'Pending', createdAt: new Date().toISOString() }, // Corrected to string
+      { _id: 'win2', msisdn: '2348037654321', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', drawDate: '2024-05-01T10:00:00.000Z', claimStatus: 'Paid', createdAt: new Date().toISOString() }, // Corrected to string
+      { _id: 'win3', msisdn: '2349098765432', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', drawDate: '2024-05-01T10:00:00.000Z', claimStatus: 'Pending', createdAt: new Date().toISOString() }, // Corrected to string
     ],
     participantsPoolA: 1500,
     participantsPoolB: 5000,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(), // Corrected to string
+    updatedAt: new Date().toISOString(), // Corrected to string
     executionLog: 'Draw started.\nSelected jackpot winner: 2348031234567.\nSelected consolation winners: 2348037654321, 2349098765432.\nDraw completed successfully.',
     jackpotWinnerValidationStatus: 'Valid',
     errorMessage: undefined, // Ensure error message is handled
   },
   {
     _id: 'draw2',
-    drawDate: new Date('2024-05-02T10:00:00Z'),
+    drawDate: '2024-05-02T10:00:00.000Z', // Corrected to string
     drawType: 'daily',
     status: 'scheduled',
     eligibleDigits: '4,5,6',
@@ -62,12 +62,12 @@ const MOCK_DRAWS: Draw[] = [
     winners: [],
     participantsPoolA: 0,
     participantsPoolB: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(), // Corrected to string
+    updatedAt: new Date().toISOString(), // Corrected to string
   },
     {
     _id: 'draw3',
-    drawDate: new Date('2024-05-04T10:00:00Z'),
+    drawDate: '2024-05-04T10:00:00.000Z', // Corrected to string
     drawType: 'saturday',
     status: 'scheduled',
     eligibleDigits: '7,8,9',
@@ -76,8 +76,8 @@ const MOCK_DRAWS: Draw[] = [
     winners: [],
     participantsPoolA: 0,
     participantsPoolB: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(), // Corrected to string
+    updatedAt: new Date().toISOString(), // Corrected to string
   },
 ];
 
@@ -100,7 +100,7 @@ const formatPrizeStructureForUI = (prizes: Prize[]) => {
 // Helper to convert UI format (object) back to API payload (array)
 const formatPrizeStructureForAPI = (uiStructure: any, drawType: 'daily' | 'saturday'): Prize[] => {
   const prizes: Prize[] = [];
-  
+
   const parseAmount = (value: string | undefined): number => parseInt(value?.replace(/[^0-9]/g, '') || '0');
 
   if (uiStructure.jackpot) {
@@ -115,13 +115,13 @@ const formatPrizeStructureForAPI = (uiStructure: any, drawType: 'daily' | 'satur
   if (uiStructure.consolation) {
     const amountMatch = uiStructure.consolation.match(/₦([0-9,]+)/)?.[1];
     const countMatch = uiStructure.consolation.match(/x ([0-9]+)/)?.[1];
-    prizes.push({ 
-      category: 'consolation', 
-      amount: parseAmount(amountMatch), 
-      count: parseInt(countMatch || '0') 
+    prizes.push({
+      category: 'consolation',
+      amount: parseAmount(amountMatch),
+      count: parseInt(countMatch || '0')
     });
   }
-  
+
   return prizes.filter(p => p.amount > 0 && p.count > 0); // Filter out invalid entries
 };
 
@@ -134,7 +134,6 @@ const maskMsisdn = (msisdn: string | undefined): string => {
 
 
 // --- Styled Components ---
-// ... (styles remain the same) ...
 const Container = styled.div`
   padding: 20px;
 `;
@@ -189,7 +188,7 @@ const Th = styled.th`
   padding: 12px 8px;
   text-align: left;
   background-color: ${({ theme }) => theme.colors.secondary};
-  color: white; 
+  color: white;
 `;
 
 const Td = styled.td`
@@ -310,7 +309,7 @@ const LogContainer = styled.pre`
   font-size: 0.9em;
 `;
 
-// --- Component --- 
+// --- Component ---
 const DrawManagement: React.FC = () => {
   const { isDemoMode } = useDemoMode();
   const [draws, setDraws] = useState<Draw[]>([]);
@@ -350,19 +349,45 @@ const DrawManagement: React.FC = () => {
       let fetchedDraws: Draw[];
       if (isDemoMode) {
         console.log("Demo Mode: Using mock draws");
-        fetchedDraws = MOCK_DRAWS;
+        // Use the mock data defined above, ensuring dates are strings
+        fetchedDraws = MOCK_DRAWS.map(draw => ({
+          ...draw,
+          // Ensure all date fields are strings if Draw type expects strings
+          drawDate: typeof draw.drawDate === 'object' ? (draw.drawDate as Date).toISOString() : draw.drawDate,
+          createdAt: typeof draw.createdAt === 'object' ? (draw.createdAt as Date).toISOString() : draw.createdAt,
+          updatedAt: typeof draw.updatedAt === 'object' ? (draw.updatedAt as Date).toISOString() : draw.updatedAt,
+          winners: draw.winners?.map(winner => ({
+            ...winner,
+            drawDate: typeof winner.drawDate === 'object' ? (winner.drawDate as Date).toISOString() : winner.drawDate,
+            createdAt: typeof winner.createdAt === 'object' ? (winner.createdAt as Date).toISOString() : winner.createdAt,
+          }))
+        }));
       } else {
         console.log("Fetching draws from API...");
         fetchedDraws = await drawService.getDraws();
       }
+      // Sort after fetching and potential type conversion
       fetchedDraws.sort((a, b) => new Date(b.drawDate).getTime() - new Date(a.drawDate).getTime());
       setDraws(fetchedDraws);
       setFilteredDraws(fetchedDraws);
     } catch (err: any) {
       console.error("Error fetching draws:", err);
       setError(`Failed to fetch draws: ${err.message}. Using mock data.`);
-      setDraws(MOCK_DRAWS);
-      setFilteredDraws(MOCK_DRAWS);
+      // Use the mock data defined above, ensuring dates are strings
+      const mockDrawsWithStringDates = MOCK_DRAWS.map(draw => ({
+        ...draw,
+        drawDate: typeof draw.drawDate === 'object' ? (draw.drawDate as Date).toISOString() : draw.drawDate,
+        createdAt: typeof draw.createdAt === 'object' ? (draw.createdAt as Date).toISOString() : draw.createdAt,
+        updatedAt: typeof draw.updatedAt === 'object' ? (draw.updatedAt as Date).toISOString() : draw.updatedAt,
+        winners: draw.winners?.map(winner => ({
+          ...winner,
+          drawDate: typeof winner.drawDate === 'object' ? (winner.drawDate as Date).toISOString() : winner.drawDate,
+          createdAt: typeof winner.createdAt === 'object' ? (winner.createdAt as Date).toISOString() : winner.createdAt,
+        }))
+      }));
+      mockDrawsWithStringDates.sort((a, b) => new Date(b.drawDate).getTime() - new Date(a.drawDate).getTime());
+      setDraws(mockDrawsWithStringDates);
+      setFilteredDraws(mockDrawsWithStringDates);
     } finally {
       setIsLoading(false);
     }
@@ -407,7 +432,9 @@ const DrawManagement: React.FC = () => {
   useEffect(() => {
     let result = draws;
     if (filterDate) {
-      result = result.filter(draw => new Date(draw.drawDate).toDateString() === new Date(filterDate).toDateString());
+      // Ensure comparison is done correctly (string vs string or Date vs Date)
+      const filterDateObj = new Date(filterDate);
+      result = result.filter(draw => new Date(draw.drawDate).toDateString() === filterDateObj.toDateString());
     }
     if (filterType) {
       result = result.filter(draw => draw.drawType === filterType);
@@ -443,10 +470,21 @@ const DrawManagement: React.FC = () => {
     try {
       if (isDemoMode) {
         console.log(`Demo Mode: Simulating execution for draw ${drawId}`);
-        await new Promise(resolve => setTimeout(resolve, 1500)); 
-        setDraws(prevDraws => prevDraws.map(d => 
-          d._id === drawId ? { ...d, status: 'completed', executionLog: 'Demo draw executed successfully.', winners: MOCK_DRAWS[0].winners } : d
-        ));
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Update mock data, ensuring dates remain strings
+        const updatedMockDraws = draws.map(d =>
+          d._id === drawId ? { ...d, status: 'completed', executionLog: 'Demo draw executed successfully.', winners: MOCK_DRAWS[0].winners?.map(w => ({...w, drawDate: '2024-05-01T10:00:00.000Z', createdAt: new Date().toISOString()})) } : d
+        );
+        setDraws(updatedMockDraws);
+        // Apply filters again if necessary, or just update filteredDraws directly
+        setFilteredDraws(updatedMockDraws.filter(d => {
+            let match = true;
+            if (filterDate) match = match && new Date(d.drawDate).toDateString() === new Date(filterDate).toDateString();
+            if (filterType) match = match && d.drawType === filterType;
+            if (filterStatus) match = match && d.status === filterStatus;
+            return match;
+        }));
+
       } else {
         console.log(`Executing draw ${drawId} via API...`);
         await drawService.executeDraw(drawId);
@@ -476,32 +514,34 @@ const DrawManagement: React.FC = () => {
         eligible_digits: scheduleUseDefault ? undefined : scheduleDigits.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)),
         use_default: scheduleUseDefault,
       };
-
       if (isDemoMode) {
         console.log("Demo Mode: Simulating schedule draw", payload);
         await new Promise(resolve => setTimeout(resolve, 1000));
         const newDraw: Draw = {
-          _id: `demo-${Date.now()}`,
-          drawDate: new Date(scheduleDate),
+          _id: `mock_draw_${Date.now()}`,
+          drawDate: new Date(scheduleDate + 'T10:00:00Z').toISOString(), // Store as string
           drawType: scheduleType as 'daily' | 'saturday',
           status: 'scheduled',
-          eligibleDigits: payload.eligible_digits?.join(',') || 'Default',
+          eligibleDigits: scheduleUseDefault ? 'DEFAULT' : scheduleDigits,
           jackpotAmount: scheduleType === 'daily' ? 1000000 : 5000000,
           rolloverAmount: 0,
           winners: [],
           participantsPoolA: 0,
           participantsPoolB: 0,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
-        setDraws(prev => [newDraw, ...prev].sort((a, b) => new Date(b.drawDate).getTime() - new Date(a.drawDate).getTime()));
+        const updatedDraws = [newDraw, ...draws].sort((a, b) => new Date(b.drawDate).getTime() - new Date(a.drawDate).getTime());
+        setDraws(updatedDraws);
+        setFilteredDraws(updatedDraws); // Update filtered list too
       } else {
         console.log("Scheduling draw via API...", payload);
         await drawService.scheduleDraw(payload);
-        await fetchDraws(); // Refresh list
+        await fetchDraws(); // Re-fetch draws
       }
       alert('Draw scheduled successfully!');
       setIsScheduleModalOpen(false);
+      // Reset schedule form
       setScheduleDate('');
       setScheduleType('daily');
       setScheduleDigits('');
@@ -515,104 +555,56 @@ const DrawManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteDraw = async (drawId: string) => {
-     if (!window.confirm('Are you sure you want to delete this scheduled draw? This action cannot be undone.')) {
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (isDemoMode) {
-        console.log(`Demo Mode: Simulating delete for draw ${drawId}`);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setDraws(prevDraws => prevDraws.filter(d => d._id !== drawId));
-      } else {
-        console.log(`Deleting draw ${drawId} via API...`);
-        await drawService.deleteDraw(drawId);
-        await fetchDraws(); // Refresh list
-      }
-      alert('Scheduled draw deleted successfully!');
-    } catch (err: any) {
-      console.error(`Error deleting draw ${drawId}:`, err);
-      setError(`Failed to delete draw ${drawId}: ${err.message}`);
-      alert(`Failed to delete draw ${drawId}: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // --- Prize Structure Handlers ---
   const handleOpenPrizeModal = (type: 'daily' | 'saturday') => {
     if (!apiPrizeStructures) {
-      setPrizeError("Prize structures haven't loaded yet. Cannot edit.");
+      setPrizeError("Prize structures not loaded yet. Please wait or try refreshing.");
       return;
     }
     setEditingPrizeType(type);
-    const uiData = formatPrizeStructureForUI(apiPrizeStructures[type]);
-    setEditablePrizesUI(uiData);
+    // Convert the specific structure from API format (array) to UI format (object)
+    const structureToEdit = type === 'daily' ? apiPrizeStructures.daily : apiPrizeStructures.saturday;
+    setEditablePrizesUI(formatPrizeStructureForUI(structureToEdit));
     setIsPrizeModalOpen(true);
-    setPrizeError(null); // Clear previous prize errors
   };
 
-  const handlePrizeInputChange = (field: string, value: string) => {
-    if (editablePrizesUI) {
-      setEditablePrizesUI({ ...editablePrizesUI, [field]: value });
-    }
+  const handlePrizeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditablePrizesUI((prev: any) => ({ ...prev, [name]: value }));
   };
 
   const handleSavePrizeStructure = async () => {
     if (!editingPrizeType || !editablePrizesUI) return;
 
-    const prizesPayload = formatPrizeStructureForAPI(editablePrizesUI, editingPrizeType);
-    
-    const payload = {
-        drawType: editingPrizeType,
-        prizes: prizesPayload
-    };
-
-    console.log("Attempting to save structure via API:", payload);
-
-    setIsLoadingPrizes(true); // Use prize-specific loading
+    setIsLoadingPrizes(true);
     setPrizeError(null);
     try {
+      // Convert UI format back to API payload format (array)
+      const apiPayload = formatPrizeStructureForAPI(editablePrizesUI, editingPrizeType);
+
       if (isDemoMode) {
-        console.log(`Demo Mode: Simulating save prize structure for ${editingPrizeType}`, payload);
+        console.log(`Demo Mode: Simulating update prize structure for ${editingPrizeType}`, apiPayload);
         await new Promise(resolve => setTimeout(resolve, 1000));
-        setApiPrizeStructures(prev => prev ? { ...prev, [editingPrizeType]: payload.prizes } : null);
+        // Update the mock structure locally
+        setApiPrizeStructures(prev => prev ? {
+          ...prev,
+          [editingPrizeType]: apiPayload
+        } : null);
       } else {
-        console.log(`Saving prize structure for ${editingPrizeType} via API...`);
-        await drawService.updatePrizeStructure(payload);
-        await fetchPrizeStructures(); // Re-fetch prize structures
+        console.log(`Updating prize structure for ${editingPrizeType} via API...`, apiPayload);
+        await drawService.updatePrizeStructure(editingPrizeType, apiPayload);
+        await fetchPrizeStructures(); // Re-fetch to confirm
       }
       alert('Prize structure updated successfully!');
       setIsPrizeModalOpen(false);
       setEditingPrizeType(null);
       setEditablePrizesUI(null);
     } catch (err: any) {
-      console.error(`Error saving prize structure for ${editingPrizeType}:`, err);
-      setPrizeError(`Failed to save prize structure: ${err.message}`);
-      alert(`Failed to save prize structure: ${err.message}`);
+      console.error(`Error updating prize structure for ${editingPrizeType}:`, err);
+      setPrizeError(`Failed to update prize structure: ${err.message}`);
+      alert(`Failed to update prize structure: ${err.message}`);
     } finally {
       setIsLoadingPrizes(false);
     }
-  };
-
-  // --- Helper Functions ---
-  const formatDate = (date: Date | string) => {
-    try {
-      return new Date(date).toLocaleDateString('en-CA'); // YYYY-MM-DD
-    } catch { return 'Invalid Date'; }
-  };
-
-  const formatDateTime = (date: Date | string) => {
-     try {
-      return new Date(date).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
-    } catch { return 'Invalid Date'; }
-  };
-
-  const formatCurrency = (amount: number | undefined) => {
-    if (amount === undefined) return 'N/A';
-    return `₦${amount.toLocaleString()}`;
   };
 
   // --- Render --- 
@@ -622,17 +614,13 @@ const DrawManagement: React.FC = () => {
         <Header>
           <Title>Draw Management</Title>
           <div>
-             <Button onClick={() => handleOpenPrizeModal('daily')} icon={<FaEdit />} style={{ marginRight: '10px' }} disabled={isLoadingPrizes || !apiPrizeStructures}>Edit Daily Prizes</Button>
-             <Button onClick={() => handleOpenPrizeModal('saturday')} icon={<FaEdit />} style={{ marginRight: '10px' }} disabled={isLoadingPrizes || !apiPrizeStructures}>Edit Saturday Prizes</Button>
-             <Button onClick={() => setIsScheduleModalOpen(true)} icon={<FaCalendarAlt />}>Schedule New Draw</Button>
+            <Button onClick={() => handleOpenPrizeModal('daily')} disabled={isLoadingPrizes}><FaEdit /> Edit Daily Prizes</Button>
+            <Button onClick={() => handleOpenPrizeModal('saturday')} disabled={isLoadingPrizes} style={{ marginLeft: '10px' }}><FaEdit /> Edit Saturday Prizes</Button>
+            <Button onClick={() => setIsScheduleModalOpen(true)} style={{ marginLeft: '10px' }}><FaCalendarAlt /> Schedule New Draw</Button>
           </div>
         </Header>
 
-        {error && <p style={{ color: 'red' }}>Draw Error: {error}</p>}
-        {prizeError && <p style={{ color: 'red' }}>Prize Structure Error: {prizeError}</p>}
-
-        {/* Filters Card */}
-        <Card title="Filters">
+        <Card>
           <Controls>
             <DatePicker value={filterDate} onChange={e => setFilterDate(e.target.value)} />
             <Select value={filterType} onChange={e => setFilterType(e.target.value)}>
@@ -647,122 +635,93 @@ const DrawManagement: React.FC = () => {
               <option value="completed">Completed</option>
               <option value="failed">Failed</option>
             </Select>
-            <Button onClick={handleClearFilters} icon={<FaFilter />} secondary>Clear Filters</Button>
+            <Button onClick={handleClearFilters}><FaFilter /> Clear Filters</Button>
           </Controls>
-        </Card>
 
-        {isLoading && <LoadingSpinner />}
+          {isLoading && <LoadingSpinner />} 
+          {error && <p style={{ color: 'red' }}>{error}</p>}
 
-        {/* Draws Table */}
-        <Card title="Draws">
-          <Table>
-            <thead>
-              <tr>
-                <Th>Draw Date</Th>
-                <Th>Type</Th>
-                <Th>Status</Th>
-                <Th>Jackpot</Th>
-                <Th>Rollover In</Th>
-                <Th>Eligible Digits</Th>
-                <Th>Pool A</Th>
-                <Th>Pool B</Th>
-                <Th>Actions</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDraws.length > 0 ? (
-                filteredDraws.map((draw) => (
+          {!isLoading && (
+            <Table>
+              <thead>
+                <tr>
+                  <Th>Draw Date</Th>
+                  <Th>Type</Th>
+                  <Th>Status</Th>
+                  <Th>Eligible Digits</Th>
+                  <Th>Jackpot (₦)</Th>
+                  <Th>Rollover (₦)</Th>
+                  <Th>Winners</Th>
+                  <Th>Actions</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredDraws.map((draw) => (
                   <Tr key={draw._id}>
-                    <Td>{formatDate(draw.drawDate)}</Td>
+                    <Td>{new Date(draw.drawDate).toLocaleString()}</Td>
                     <Td>{draw.drawType}</Td>
                     <Td><StatusBadge status={draw.status}>{draw.status}</StatusBadge></Td>
-                    <Td>{formatCurrency(draw.jackpotAmount)}</Td>
-                    <Td>{formatCurrency(draw.rolloverAmount)}</Td>
-                    <Td>{draw.eligibleDigits || 'Default'}</Td>
-                    <Td>{draw.participantsPoolA ?? 'N/A'}</Td>
-                    <Td>{draw.participantsPoolB ?? 'N/A'}</Td>
+                    <Td>{draw.eligibleDigits}</Td>
+                    <Td>{draw.jackpotAmount?.toLocaleString()}</Td>
+                    <Td>{draw.rolloverAmount?.toLocaleString()}</Td>
+                    <Td>{draw.winners?.length ?? 0}</Td>
                     <Td>
-                      <ActionButton onClick={() => handleViewDetails(draw)} small>Details</ActionButton>
+                      <IconButton onClick={() => handleViewDetails(draw)} title="View Details"><FaTrophy /></IconButton>
                       {draw.status === 'scheduled' && (
-                        <>
-                          <ActionButton 
-                            onClick={() => handleExecuteDraw(draw._id)} 
-                            icon={<FaPlay />} 
-                            disabled={isLoading} 
-                            success 
-                            small
-                          >
-                            Execute
-                          </ActionButton>
-                           <IconButton 
-                              onClick={() => handleDeleteDraw(draw._id)} 
-                              disabled={isLoading} 
-                              title="Delete Scheduled Draw"
-                            >
-                              <FaTrashAlt color="red" />
-                            </IconButton>
-                        </>
+                        <IconButton onClick={() => handleExecuteDraw(draw._id)} title="Execute Draw" disabled={isLoading}><FaPlay /></IconButton>
                       )}
+                      {/* Add other actions like cancel if needed */}
                     </Td>
                   </Tr>
-                ))
-              ) : (
-                <Tr>
-                  <Td colSpan={9} style={{ textAlign: 'center' }}>No draws found matching filters.</Td>
-                </Tr>
-              )}
-            </tbody>
-          </Table>
+                ))}
+              </tbody>
+            </Table>
+          )}
         </Card>
 
-        {/* Draw Detail Modal (UPDATED) */}
+        {/* Draw Detail Modal */}
         {isDetailModalOpen && selectedDraw && (
           <ModalOverlay onClick={() => setIsDetailModalOpen(false)}>
-            <ModalContent onClick={(e) => e.stopPropagation()}> 
-              <ModalHeader>Draw Details ({selectedDraw._id})</ModalHeader>
-              <p><strong>Date:</strong> {formatDateTime(selectedDraw.drawDate)}</p>
+            <ModalContent onClick={(e) => e.stopPropagation()}>
+              <ModalHeader>Draw Details - {new Date(selectedDraw.drawDate).toLocaleDateString()}</ModalHeader>
+              <p><strong>ID:</strong> {selectedDraw._id}</p>
               <p><strong>Type:</strong> {selectedDraw.drawType}</p>
               <p><strong>Status:</strong> <StatusBadge status={selectedDraw.status}>{selectedDraw.status}</StatusBadge></p>
-              <p><strong>Jackpot Amount:</strong> {formatCurrency(selectedDraw.jackpotAmount)}</p>
-              <p><strong>Rollover Included:</strong> {formatCurrency(selectedDraw.rolloverAmount)}</p>
-              <p><strong>Eligible Digits:</strong> {selectedDraw.eligibleDigits || 'Default'}</p>
-              <p><strong>Participants (Pool A - Jackpot):</strong> {selectedDraw.participantsPoolA ?? 'N/A'}</p>
-              <p><strong>Participants (Pool B - Consolation):</strong> {selectedDraw.participantsPoolB ?? 'N/A'}</p>
+              <p><strong>Eligible Digits:</strong> {selectedDraw.eligibleDigits}</p>
+              <p><strong>Jackpot Amount:</strong> ₦{selectedDraw.jackpotAmount?.toLocaleString()}</p>
+              <p><strong>Rollover Amount:</strong> ₦{selectedDraw.rolloverAmount?.toLocaleString()}</p>
+              <p><strong>Pool A Participants:</strong> {selectedDraw.participantsPoolA ?? 'N/A'}</p>
+              <p><strong>Pool B Participants:</strong> {selectedDraw.participantsPoolB ?? 'N/A'}</p>
+              <p><strong>Jackpot Winner Validation:</strong> {selectedDraw.jackpotWinnerValidationStatus ?? 'N/A'}</p>
               
-              {/* Display Jackpot Validation Status */}
-              {selectedDraw.jackpotWinnerValidationStatus && (
-                 <p><strong>Jackpot Validation:</strong> {selectedDraw.jackpotWinnerValidationStatus}</p>
-              )}
-              
-              {/* Display Execution Log */}
-              {selectedDraw.executionLog && (
-                <>
-                  <strong>Execution Log:</strong>
-                  <LogContainer>{selectedDraw.executionLog}</LogContainer>
-                </>
-              )}
-              
-              {/* Display Error Message */}
               {selectedDraw.errorMessage && (
-                 <p><strong>Error Message:</strong> <span style={{color: 'red'}}>{selectedDraw.errorMessage}</span></p>
+                  <div>
+                      <strong>Error Message:</strong>
+                      <LogContainer>{selectedDraw.errorMessage}</LogContainer>
+                  </div>
+              )}
+              {selectedDraw.executionLog && (
+                  <div>
+                      <strong>Execution Log:</strong>
+                      <LogContainer>{selectedDraw.executionLog}</LogContainer>
+                  </div>
               )}
 
-              <strong>Winners:</strong>
+              <strong>Winners ({selectedDraw.winners?.length ?? 0}):</strong>
               {selectedDraw.winners && selectedDraw.winners.length > 0 ? (
                 <WinnerList>
                   {selectedDraw.winners.map(winner => (
                     <WinnerItem key={winner._id}>
-                      {/* Apply MSISDN Masking */}
-                      {maskMsisdn(winner.msisdn)} - {winner.prizeCategory} ({formatCurrency(winner.prizeAmount)}) - Status: {winner.claimStatus || 'N/A'}
+                      {winner.prizeCategory.toUpperCase()}: {maskMsisdn(winner.msisdn)} - ₦{winner.prizeAmount.toLocaleString()} ({winner.claimStatus})
                     </WinnerItem>
                   ))}
                 </WinnerList>
               ) : (
-                <p>No winners selected for this draw yet.</p>
+                <p>No winners selected for this draw.</p>
               )}
 
               <ModalFooter>
-                <Button onClick={() => setIsDetailModalOpen(false)} secondary>Close</Button>
+                <Button onClick={() => setIsDetailModalOpen(false)}>Close</Button>
               </ModalFooter>
             </ModalContent>
           </ModalOverlay>
@@ -771,99 +730,76 @@ const DrawManagement: React.FC = () => {
         {/* Schedule Draw Modal */}
         {isScheduleModalOpen && (
           <ModalOverlay onClick={() => setIsScheduleModalOpen(false)}>
-            <ModalContent onClick={(e) => e.stopPropagation()}> 
+            <ModalContent onClick={(e) => e.stopPropagation()}>
               <ModalHeader>Schedule New Draw</ModalHeader>
               <div>
                 <label>Draw Date:</label>
-                <DatePicker value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} required style={{ display: 'block', marginBottom: '10px' }}/>
+                <DatePicker value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} required />
               </div>
-              <div>
+              <div style={{ marginTop: '10px' }}>
                 <label>Draw Type:</label>
-                <Select value={scheduleType} onChange={e => setScheduleType(e.target.value)} required style={{ display: 'block', marginBottom: '10px' }}>
+                <Select value={scheduleType} onChange={e => setScheduleType(e.target.value)} required>
                   <option value="daily">Daily</option>
                   <option value="saturday">Saturday</option>
                 </Select>
               </div>
-              <div>
-                 <label style={{ marginRight: '10px' }}>Use Default Eligible Digits?</label>
-                 <Switch 
-                    isOn={scheduleUseDefault}
-                    handleToggle={() => setScheduleUseDefault(!scheduleUseDefault)}
-                 />
+              <div style={{ marginTop: '10px' }}>
+                <label style={{ display: 'flex', alignItems: 'center' }}>
+                  Use Default Eligible Digits:
+                  <Switch 
+                    checked={scheduleUseDefault} 
+                    onChange={() => setScheduleUseDefault(!scheduleUseDefault)} 
+                  />
+                </label>
               </div>
               {!scheduleUseDefault && (
-                <div>
+                <div style={{ marginTop: '10px' }}>
                   <label>Eligible Digits (comma-separated):</label>
                   <FilterInput 
                     value={scheduleDigits} 
                     onChange={e => setScheduleDigits(e.target.value)} 
-                    placeholder="e.g., 1,5,9" 
-                    required 
-                    style={{ display: 'block', marginBottom: '10px' }}
+                    placeholder="e.g., 1, 5, 9" 
+                    required={!scheduleUseDefault}
                   />
                 </div>
               )}
               <ModalFooter>
-                <Button onClick={handleScheduleDraw} icon={<FaCalendarAlt />} disabled={isLoading} success>Schedule</Button>
-                <Button onClick={() => setIsScheduleModalOpen(false)} disabled={isLoading} secondary>Cancel</Button>
+                <Button onClick={() => setIsScheduleModalOpen(false)} variant="secondary">Cancel</Button>
+                <Button onClick={handleScheduleDraw} disabled={isLoading}>Schedule Draw</Button>
               </ModalFooter>
             </ModalContent>
           </ModalOverlay>
         )}
 
-         {/* Prize Structure Modal */}
+        {/* Edit Prize Structure Modal */}
         {isPrizeModalOpen && editingPrizeType && editablePrizesUI && (
           <ModalOverlay onClick={() => setIsPrizeModalOpen(false)}>
-            <ModalContent onClick={(e) => e.stopPropagation()}> 
+            <ModalContent onClick={(e) => e.stopPropagation()}>
               <ModalHeader>Edit {editingPrizeType === 'daily' ? 'Daily' : 'Saturday'} Prize Structure</ModalHeader>
               {isLoadingPrizes && <LoadingSpinner />}
-              {prizeError && <p style={{ color: 'red' }}>Error: {prizeError}</p>} 
-              
-              <div>
-                 <label>Jackpot Amount (₦):</label>
-                 <FilterInput 
-                    value={editablePrizesUI.jackpot || ''} 
-                    onChange={e => handlePrizeInputChange('jackpot', e.target.value)} 
-                    placeholder="e.g., 1,000,000" 
-                    style={{ display: 'block', marginBottom: '10px' }}
-                    disabled={isLoadingPrizes}
-                 />
-              </div>
-               <div>
-                 <label>Second Prize Amount (₦):</label>
-                 <FilterInput 
-                    value={editablePrizesUI.second || ''} 
-                    onChange={e => handlePrizeInputChange('second', e.target.value)} 
-                    placeholder="e.g., 100,000" 
-                    style={{ display: 'block', marginBottom: '10px' }}
-                    disabled={isLoadingPrizes}
-                 />
-              </div>
-               <div>
-                 <label>Third Prize Amount (₦):</label>
-                 <FilterInput 
-                    value={editablePrizesUI.third || ''} 
-                    onChange={e => handlePrizeInputChange('third', e.target.value)} 
-                    placeholder="e.g., 50,000" 
-                    style={{ display: 'block', marginBottom: '10px' }}
-                    disabled={isLoadingPrizes}
-                 />
-              </div>
-               <div>
-                 <label>Consolation Prizes (Format: ₦Amount x Winners):</label>
-                 <FilterInput 
-                    value={editablePrizesUI.consolation || ''} 
-                    onChange={e => handlePrizeInputChange('consolation', e.target.value)} 
-                    placeholder="e.g., ₦5,000 x 7 winners" 
-                    style={{ display: 'block', marginBottom: '10px' }}
-                    disabled={isLoadingPrizes}
-                 />
-              </div>
-              
-              <ModalFooter>
-                <Button onClick={handleSavePrizeStructure} icon={<FaSave />} disabled={isLoadingPrizes} success>Save Changes</Button>
-                <Button onClick={() => setIsPrizeModalOpen(false)} disabled={isLoadingPrizes} secondary>Cancel</Button>
-              </ModalFooter>
+              {prizeError && <p style={{ color: 'red' }}>{prizeError}</p>}
+              {!isLoadingPrizes && (
+                <>
+                  {/* Dynamically create inputs based on expected categories */}
+                  {Object.keys(editablePrizesUI).map(category => (
+                     <div key={category} style={{ marginBottom: '10px' }}>
+                       <label style={{ textTransform: 'capitalize', marginRight: '10px' }}>{category}:</label>
+                       <FilterInput 
+                         name={category} 
+                         value={editablePrizesUI[category] || ''} 
+                         onChange={handlePrizeInputChange} 
+                         placeholder={category === 'consolation' ? 'e.g., ₦5,000 x 7 winners' : 'e.g., ₦1,000,000'} 
+                       />
+                     </div>
+                  ))}
+                  {/* Add button to add new prize category if needed */}
+                  {/* <Button size="small" onClick={handleAddPrizeCategory}><FaPlusCircle /> Add Category</Button> */}
+                  <ModalFooter>
+                    <Button onClick={() => setIsPrizeModalOpen(false)} variant="secondary">Cancel</Button>
+                    <Button onClick={handleSavePrizeStructure} disabled={isLoadingPrizes}>Save Changes</Button>
+                  </ModalFooter>
+                </>
+              )}
             </ModalContent>
           </ModalOverlay>
         )}
