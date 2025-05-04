@@ -31,17 +31,18 @@ const MOCK_PRIZE_STRUCTURES_LEGACY_FORMAT = {
 
 const MOCK_DRAWS: Draw[] = [
     {
-    _id: 'draw1',
+    id: 'draw1',
     drawDate: '2024-05-01T10:00:00.000Z', // Corrected to string
     drawType: 'daily',
     status: 'completed',
     eligibleDigits: [1, 2, 3],
+    useDefault: true, // Added to match type
     jackpotAmount: 1000000,
     rolloverAmount: 0,
     winners: [
-      { _id: 'win1', msisdn: '2348031234567', prizeCategory: 'jackpot', prizeAmount: 1000000, drawId: 'draw1', drawDate: '2024-05-01T10:00:00.000Z', claimStatus: 'Pending', createdAt: new Date().toISOString() }, // Corrected to string
-      { _id: 'win2', msisdn: '2348037654321', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', drawDate: '2024-05-01T10:00:00.000Z', claimStatus: 'Paid', createdAt: new Date().toISOString() }, // Corrected to string
-      { _id: 'win3', msisdn: '2349098765432', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', drawDate: '2024-05-01T10:00:00.000Z', claimStatus: 'Pending', createdAt: new Date().toISOString() }, // Corrected to string
+      { id: 'win1', msisdn: '2348031234567', prizeCategory: 'jackpot', prizeAmount: 1000000, drawId: 'draw1', winDate: '2024-05-01T10:00:00.000Z', isOptedIn: true, isValid: true, claimStatus: 'Pending', createdAt: new Date().toISOString() }, // Corrected field name and added missing fields
+      { id: 'win2', msisdn: '2348037654321', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: '2024-05-01T10:00:00.000Z', isOptedIn: true, isValid: true, claimStatus: 'Paid', createdAt: new Date().toISOString() }, // Corrected field name and added missing fields
+      { id: 'win3', msisdn: '2349098765432', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: '2024-05-01T10:00:00.000Z', isOptedIn: false, isValid: true, claimStatus: 'Pending', createdAt: new Date().toISOString() }, // Corrected field name and added missing fields
     ],
     participantsPoolA: 1500,
     participantsPoolB: 5000,
@@ -52,11 +53,12 @@ const MOCK_DRAWS: Draw[] = [
     errorMessage: undefined, // Ensure error message is handled
   },
   {
-    _id: 'draw2',
+    id: 'draw2',
     drawDate: '2024-05-02T10:00:00.000Z', // Corrected to string
     drawType: 'daily',
     status: 'scheduled',
     eligibleDigits: [4, 5, 6],
+    useDefault: true, // Added to match type
     jackpotAmount: 1000000,
     rolloverAmount: 0,
     winners: [],
@@ -66,11 +68,12 @@ const MOCK_DRAWS: Draw[] = [
     updatedAt: new Date().toISOString(), // Corrected to string
   },
     {
-    _id: 'draw3',
+    id: 'draw3',
     drawDate: '2024-05-04T10:00:00.000Z', // Corrected to string
     drawType: 'saturday',
     status: 'scheduled',
     eligibleDigits: [7, 8, 9],
+    useDefault: true, // Added to match type
     jackpotAmount: 5000000,
     rolloverAmount: 150000, // Example rollover
     winners: [],
@@ -810,5 +813,4 @@ const DrawManagement: React.FC = () => {
 };
 
 export default DrawManagement;
-
 
