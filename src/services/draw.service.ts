@@ -46,6 +46,26 @@ interface ScheduleDrawPayload {
   use_default: boolean;
 }
 
+// Define Prize type (based on backend expectation)
+interface Prize {
+  category: string;
+  amount: number;
+  count: number;
+}
+
+// Define Prize Structure type (assuming backend returns this structure)
+interface PrizeStructure {
+  daily: Prize[];
+  saturday: Prize[];
+}
+
+// Define payload for updating prize structure
+interface UpdatePrizeStructurePayload {
+  drawType: 'daily' | 'saturday';
+  prizes: Prize[];
+}
+
+
 class DrawService {
 
   // GET /draws?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
@@ -74,7 +94,7 @@ class DrawService {
     try {
       return await fetchApi(`/draws/date/${date}`);
     } catch (error: any) {
-       if (error.message.includes('404') || error.message.toLowerCase().includes('not found')) {
+      if (error.message.includes('404') || error.message.toLowerCase().includes('not found')) {
         return null; // Return null if draw not found for the date
       }
       throw error; // Re-throw other errors
@@ -89,9 +109,14 @@ class DrawService {
 
   // POST /draws/schedule
   async scheduleDraw(payload: ScheduleDrawPayload): Promise<Draw> {
+    // Convert draw_type to uppercase if needed by backend
+    const backendPayload = {
+      ...payload,
+      draw_type: payload.draw_type.toUpperCase() as 'DAILY' | 'SATURDAY'
+    };
     return fetchApi('/draws/schedule', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(backendPayload),
     });
   }
 
@@ -107,12 +132,40 @@ class DrawService {
     return fetchApi(`/draws/${id}/winners`);
   }
 
-  // --- Placeholder/Removed Methods from original mock ---
+  // DELETE /draws/:id (Added based on DrawManagement usage)
+  async deleteDraw(id: string): Promise<void> {
+    // Assuming backend supports DELETE for scheduled draws
+    await fetchApi(`/draws/${id}`, { method: 'DELETE' });
+  }
 
-  // createDraw is replaced by scheduleDraw
-  // updateDraw - No direct equivalent found in routes, might need specific endpoints if required
-  // deleteDraw - No equivalent found in routes
+  // GET /draws/prize-structure (NEW)
+  async getPrizeStructure(): Promise<PrizeStructure> {
+    // Assuming endpoint returns { daily: Prize[], saturday: Prize[] }
+    return fetchApi('/draws/prize-structure');
+  }
+
+  // PUT /draws/prize-structure (NEW)
+  async updatePrizeStructure(payload: UpdatePrizeStructurePayload): Promise<void> {
+    // Assuming endpoint accepts { drawType: 'daily'|'saturday', prizes: Prize[] }
+    await fetchApi('/draws/prize-structure', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  // GET /draws/jackpot-status (NEW - for later step)
+  async getJackpotStatus(): Promise<{ currentAmount: number /* Add other fields as needed */ }> {
+    return fetchApi('/draws/jackpot-status');
+  }
+
+  // GET /draws/rollovers (NEW - for later step, requires backend endpoint)
+  async getRolloverHistory(/* Add filters if needed */): Promise<any[]> { // Define Rollover type later
+    // Example endpoint, adjust as needed
+    return fetchApi('/draws/rollovers'); 
+  }
+
 }
 
 export const drawService = new DrawService();
+
 
