@@ -638,7 +638,7 @@ const DrawManagement: React.FC = () => {
               <option value="completed">Completed</option>
               <option value="failed">Failed</option>
             </Select>
-            <Button onClick={handleClearFilters}><FaFilter /> Clear Filters</Button>
+            <Button onClick={handleClearFilters} variant="secondary"><FaFilter /> Clear Filters</Button>
           </Controls>
 
           {isLoading && <LoadingSpinner />} 
@@ -813,6 +813,8 @@ const DrawManagement: React.FC = () => {
 };
 
 export default DrawManagement;
+
+
 
 
 
