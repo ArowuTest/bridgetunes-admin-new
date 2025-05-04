@@ -1,819 +1,646 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import styled from 'styled-components';
-import { FaDice, FaFilter, FaPlay, FaTrophy, FaCalendarAlt, FaLock, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaEdit, FaSave, FaTrashAlt, FaPlusCircle } from 'react-icons/fa';
-import { useDemoMode } from '../context/DemoModeContext';
-import { drawService } from '../services/draw.service'; // Assuming updated service file
-import PageLayout from '../components/PageLayout';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import LoadingSpinner from '../components/LoadingSpinner';
-import DrawWheel from '../components/draw/DrawWheel';
-import Switch from './Switch';
-import { Draw, Winner, Prize } from '../types/draw.types'; // Import Prize type
+import React, { useState, useEffect, useCallback } from "react";
+import styled from "styled-components";
+import DatePicker from "react-datepicker"; // Import DatePicker
+import "react-datepicker/dist/react-datepicker.css"; // Import default styles
+import { FaCalendarAlt, FaTrophy, FaPlay, FaFilter } from "react-icons/fa";
+import { ToastContainer, toast } from "react-toastify"; // Import toast
+import "react-toastify/dist/ReactToastify.css"; // Import toast styles
+import { PageLayout } from "../components/PageLayout";
+import { Button } from "../components/Button";
+import { Modal } from "../components/Modal"; // Assuming a Modal component exists
+import { StatusBadge } from "../components/StatusBadge"; // Assuming a StatusBadge component exists
+import { getDraws, executeDraw, scheduleDraw, getPrizeStructure, updatePrizeStructure } from "../services/draw.service"; // Assuming these API functions exist
+import { Draw, PrizeStructure, Winner } from "../types/draw.types"; // Assuming these types exist
 
-// --- Mock Data (Keep for fallback/initial state if needed) ---
-const MOCK_PRIZE_STRUCTURES_LEGACY_FORMAT = {
-  daily: {
-    jackpot: '₦1,000,000',
-    second: '₦100,000',
-    third: '₦50,000',
-    consolation: '₦5,000 x 7 winners',
-    total: '₦1,185,000',
-  },
-  saturday: {
-    jackpot: '₦5,000,000',
-    second: '₦250,000',
-    third: '₦100,000',
-    consolation: '₦10,000 x 7 winners',
-    total: '₦5,420,000',
-  },
+// Helper function to get day name (e.g., "Monday")
+const getDayOfWeekName = (dayIndex: number): string => {
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    return days[dayIndex];
 };
 
-const MOCK_DRAWS: Draw[] = [
-    {
-    id: 'draw1',
-    drawDate: '2024-05-01T10:00:00.000Z', // Corrected to string
-    drawType: 'daily',
-    status: 'completed',
-    eligibleDigits: [1, 2, 3],
-    useDefault: true, // Added to match type
-    jackpotAmount: 1000000,
-    rolloverAmount: 0,
-    winners: [
-      { id: 'win1', msisdn: '2348031234567', prizeCategory: 'jackpot', prizeAmount: 1000000, drawId: 'draw1', winDate: '2024-05-01T10:00:00.000Z', isOptedIn: true, isValid: true, claimStatus: 'Pending', createdAt: new Date().toISOString() }, // Corrected field name and added missing fields
-      { id: 'win2', msisdn: '2348037654321', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: '2024-05-01T10:00:00.000Z', isOptedIn: true, isValid: true, claimStatus: 'Paid', createdAt: new Date().toISOString() }, // Corrected field name and added missing fields
-      { id: 'win3', msisdn: '2349098765432', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: '2024-05-01T10:00:00.000Z', isOptedIn: false, isValid: true, claimStatus: 'Pending', createdAt: new Date().toISOString() }, // Corrected field name and added missing fields
-    ],
-    participantsPoolA: 1500,
-    participantsPoolB: 5000,
-    createdAt: new Date().toISOString(), // Corrected to string
-    updatedAt: new Date().toISOString(), // Corrected to string
-    executionLog: 'Draw started.\nSelected jackpot winner: 2348031234567.\nSelected consolation winners: 2348037654321, 2349098765432.\nDraw completed successfully.',
-    jackpotWinnerValidationStatus: 'Valid',
-    errorMessage: undefined, // Ensure error message is handled
-  },
-  {
-    id: 'draw2',
-    drawDate: '2024-05-02T10:00:00.000Z', // Corrected to string
-    drawType: 'daily',
-    status: 'scheduled',
-    eligibleDigits: [4, 5, 6],
-    useDefault: true, // Added to match type
-    jackpotAmount: 1000000,
-    rolloverAmount: 0,
-    winners: [],
-    participantsPoolA: 0,
-    participantsPoolB: 0,
-    createdAt: new Date().toISOString(), // Corrected to string
-    updatedAt: new Date().toISOString(), // Corrected to string
-  },
-    {
-    id: 'draw3',
-    drawDate: '2024-05-04T10:00:00.000Z', // Corrected to string
-    drawType: 'saturday',
-    status: 'scheduled',
-    eligibleDigits: [7, 8, 9],
-    useDefault: true, // Added to match type
-    jackpotAmount: 5000000,
-    rolloverAmount: 150000, // Example rollover
-    winners: [],
-    participantsPoolA: 0,
-    participantsPoolB: 0,
-    createdAt: new Date().toISOString(), // Corrected to string
-    updatedAt: new Date().toISOString(), // Corrected to string
-  },
-];
+// Helper function to get day index (0=Sun, 1=Mon, ...)
+const getDayOfWeekIndex = (year: number, month: number, day: number): number => {
+    // Month is 0-indexed in JS Date (0=Jan, 1=Feb, ...)
+    return new Date(year, month, day).getDay();
+};
 
-// Helper to convert API prize structure (array) to UI format (object)
-const formatPrizeStructureForUI = (prizes: Prize[]) => {
-  const uiStructure: any = {};
-  prizes.forEach(prize => {
-    if (prize.category === 'consolation') {
-      uiStructure[prize.category] = `₦${prize.amount.toLocaleString()} x ${prize.count || 1} winners`; // Use count (reverted)
-    } else if (prize.category === 'jackpot' || prize.category === 'second' || prize.category === 'third') {
-      uiStructure[prize.category] = `₦${prize.amount.toLocaleString()}`;
+// Helper function to get recommended digits based on day
+const getRecommendedDigits = (dayName: string): number[] => {
+    switch (dayName) {
+        case "Monday": return [0, 1];
+        case "Tuesday": return [2, 3];
+        case "Wednesday": return [4, 5];
+        case "Thursday": return [6, 7];
+        case "Friday": return [8, 9];
+        case "Saturday": return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; // All digits
+        default: return []; // Sunday or invalid
     }
-    // Add other categories if needed
-  });
-  // Calculate total (optional, can be done in UI)
-  // uiStructure.total = `₦${prizes.reduce((sum, p) => sum + (p.amount * p.count), 0).toLocaleString()}`;
-  return uiStructure;
 };
 
-// Helper to convert UI format (object) back to API payload (array)
-const formatPrizeStructureForAPI = (uiStructure: any, drawType: 'daily' | 'saturday'): Prize[] => {
-  const prizes: Prize[] = [];
-
-  const parseAmount = (value: string | undefined): number => parseInt(value?.replace(/[^0-9]/g, '') || '0');
-
-  if (uiStructure.jackpot) {
-    prizes.push({ category: 'jackpot', amount: parseAmount(uiStructure.jackpot), count: 1 }); // Use count (reverted)
-  }
-  if (uiStructure.second) {
-    prizes.push({ category: 'second', amount: parseAmount(uiStructure.second), count: 1 }); // Use count (reverted)
-  }
-  if (uiStructure.third) {
-    prizes.push({ category: 'third', amount: parseAmount(uiStructure.third), count: 1 }); // Use count (reverted)
-  }
-  if (uiStructure.consolation) {
-    const amountMatch = uiStructure.consolation.match(/₦([0-9,]+)/)?.[1];
-    const countMatch = uiStructure.consolation.match(/x ([0-9]+)/)?.[1];
-    prizes.push({
-      category: 'consolation',
-      amount: parseAmount(amountMatch),
-      count: parseInt(countMatch || '0') // Use count (reverted)
-    });
-  }
-
-  return prizes.filter(p => p.amount > 0 && p.count && p.count > 0); // Filter out invalid entries, use count (reverted)
+// Helper function for notifications
+const showNotification = (type: "success" | "error" | "info", message: string) => {
+    switch (type) {
+        case "success":
+            toast.success(message);
+            break;
+        case "error":
+            toast.error(message);
+            break;
+        case "info":
+            toast.info(message);
+            break;
+        default:
+            toast(message);
+    }
 };
 
-// Helper function to mask MSISDN (e.g., 234803****567)
-const maskMsisdn = (msisdn: string | undefined): string => {
-  if (!msisdn || msisdn.length < 10) return msisdn || 'N/A'; // Basic validation
-  // Keep first 6 and last 3 digits
-  return `${msisdn.substring(0, 6)}****${msisdn.substring(msisdn.length - 3)}`;
-};
+// Type for draw stage
+type DrawStage = "idle" | "loading" | "spinning" | "revealing" | "complete" | "error";
 
-
-// --- Styled Components ---
+// Styled Components (Refine as needed)
 const Container = styled.div`
   padding: 20px;
-`;
-
-const Header = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  flex-direction: column;
+  gap: 20px;
 `;
 
-const Title = styled.h1`
-  color: ${({ theme }) => theme.colors.primary};
-`;
-
-const Controls = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
-`;
-
-const FilterInput = styled.input`
-  padding: 8px 12px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 4px;
-  background-color: ${({ theme }) => theme.colors.background};
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const DatePicker = styled(FilterInput).attrs({ type: 'date' })``;
-
-const Select = styled.select`
-  padding: 8px 12px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 4px;
-  background-color: ${({ theme }) => theme.colors.background};
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  background-color: ${({ theme }) => theme.colors.background};
-  color: ${({ theme }) => theme.colors.text};
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const Th = styled.th`
-  border-bottom: 2px solid ${({ theme }) => theme.colors.primary};
-  padding: 12px 8px;
-  text-align: left;
-  background-color: ${({ theme }) => theme.colors.secondary};
-  color: white;
-`;
-
-const Td = styled.td`
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  padding: 10px 8px;
-  vertical-align: middle; /* Align content vertically */
-`;
-
-const Tr = styled.tr`
-  &:nth-child(even) {
-    background-color: ${({ theme }) => theme.colors.light};
-  }
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.tertiary};
-  }
-`;
-
-const StatusBadge = styled.span<{ status: string }>`
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8em;
-  color: white;
-  background-color: ${({ status, theme }) => {
-    switch (status) {
-      case 'scheduled': return theme.colors.info;
-      case 'running': return theme.colors.warning;
-      case 'completed': return theme.colors.success;
-      case 'failed': return theme.colors.danger;
-      default: return theme.colors.secondary;
-    }
-  }};
-`;
-
-const ActionButton = styled(Button)`
-  padding: 5px 10px;
-  font-size: 0.9em;
-  margin-right: 5px;
-`;
-
-const IconButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: ${({ theme }) => theme.colors.primary};
-  margin: 0 5px;
-  font-size: 1.1em;
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.secondary};
-  }
-
-  &:disabled {
-    color: ${({ theme }) => theme.colors.border};
-    cursor: not-allowed;
-  }
-`;
-
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const ModalContent = styled.div`
-  background-color: ${({ theme }) => theme.colors.background};
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  max-width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const ModalHeader = styled.h2`
-  margin-top: 0;
-  color: ${({ theme }) => theme.colors.primary};
-  margin-bottom: 20px;
-`;
-
-const ModalFooter = styled.div`
-  margin-top: 20px;
+const AdminButtons = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  margin-bottom: 20px;
 `;
 
-const WinnerList = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin-top: 10px;
+const DrawConfigArea = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 `;
 
-const WinnerItem = styled.li`
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  padding: 8px;
-  margin-bottom: 5px;
-  border-radius: 4px;
-  font-size: 0.9em;
+const ConfigSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 `;
 
-const LogContainer = styled.pre`
-  background-color: ${({ theme }) => theme.colors.light};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  padding: 10px;
-  border-radius: 4px;
-  max-height: 200px;
-  overflow-y: auto;
-  white-space: pre-wrap; /* Wrap long lines */
-  word-wrap: break-word;
-  font-size: 0.9em;
-`;
-
-// --- Component ---
-const DrawManagement: React.FC = () => {
-  const { isDemoMode } = useDemoMode();
-  const [draws, setDraws] = useState<Draw[]>([]);
-  const [filteredDraws, setFilteredDraws] = useState<Draw[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingPrizes, setIsLoadingPrizes] = useState(false); // Separate loading for prizes
-  const [error, setError] = useState<string | null>(null);
-  const [prizeError, setPrizeError] = useState<string | null>(null); // Separate error for prizes
-  const [selectedDraw, setSelectedDraw] = useState<Draw | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  const [isPrizeModalOpen, setIsPrizeModalOpen] = useState(false);
-
-  // Filters
-  const [filterDate, setFilterDate] = useState('');
-  const [filterType, setFilterType] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
-
-  // Schedule Draw State
-  const [scheduleDate, setScheduleDate] = useState('');
-  const [scheduleType, setScheduleType] = useState('daily');
-  const [scheduleDigits, setScheduleDigits] = useState('');
-  const [scheduleUseDefault, setScheduleUseDefault] = useState(true);
-
-  // Prize Structure State
-  // Store the API response format { daily: Prize[], saturday: Prize[] }
-  const [apiPrizeStructures, setApiPrizeStructures] = useState<{ daily: Prize[], saturday: Prize[] } | null>(null);
-  const [editingPrizeType, setEditingPrizeType] = useState<'daily' | 'saturday' | null>(null);
-  // Store the UI format for editing { jackpot: '₦...', second: '₦...', ... }
-  const [editablePrizesUI, setEditablePrizesUI] = useState<any>(null);
-
-  // Fetch Draws Function
-  const fetchDraws = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      let fetchedDraws: Draw[];
-      if (isDemoMode) {
-        console.log("Demo Mode: Using mock draws");
-        // Use the mock data defined above, ensuring dates are strings
-        fetchedDraws = MOCK_DRAWS.map(draw => ({
-          ...draw,
-          // Ensure all date fields are strings if Draw type expects strings
-          drawDate: typeof draw.drawDate === 'object' ? (draw.drawDate as Date).toISOString() : draw.drawDate,
-          createdAt: typeof draw.createdAt === 'object' ? (draw.createdAt as Date).toISOString() : draw.createdAt,
-          updatedAt: typeof draw.updatedAt === 'object' ? (draw.updatedAt as Date).toISOString() : draw.updatedAt,
-          winners: draw.winners?.map(winner => ({
-            ...winner,
-            winDate: typeof winner.winDate === 'object' ? (winner.winDate as Date).toISOString() : winner.winDate, // Use winDate
-            createdAt: typeof winner.createdAt === 'object' ? (winner.createdAt as Date).toISOString() : winner.createdAt,
-          }))
-        }));
-      } else {
-        console.log("Fetching draws from API...");
-        fetchedDraws = await drawService.getDraws();
-      }
-      // Sort after fetching and potential type conversion
-      fetchedDraws.sort((a, b) => new Date(b.drawDate).getTime() - new Date(a.drawDate).getTime());
-      setDraws(fetchedDraws);
-      setFilteredDraws(fetchedDraws);
-    } catch (err: any) {
-      console.error("Error fetching draws:", err);
-      setError(`Failed to fetch draws: ${err.message}. Using mock data.`);
-      // Use the mock data defined above, ensuring dates are strings
-      const mockDrawsWithStringDates = MOCK_DRAWS.map(draw => ({
-        ...draw,
-        drawDate: typeof draw.drawDate === 'object' ? (draw.drawDate as Date).toISOString() : draw.drawDate,
-        createdAt: typeof draw.createdAt === 'object' ? (draw.createdAt as Date).toISOString() : draw.createdAt,
-        updatedAt: typeof draw.updatedAt === 'object' ? (draw.updatedAt as Date).toISOString() : draw.updatedAt,
-        winners: draw.winners?.map(winner => ({
-          ...winner,
-          winDate: typeof winner.winDate === 'object' ? (winner.winDate as Date).toISOString() : winner.winDate, // Use winDate
-          createdAt: typeof winner.createdAt === 'object' ? (winner.createdAt as Date).toISOString() : winner.createdAt,
-        }))
-      }));
-      mockDrawsWithStringDates.sort((a, b) => new Date(b.drawDate).getTime() - new Date(a.drawDate).getTime());
-      setDraws(mockDrawsWithStringDates);
-      setFilteredDraws(mockDrawsWithStringDates);
-    } finally {
-      setIsLoading(false);
+const DigitSelector = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  button {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    background-color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    &.selected {
+      background-color: #007bff;
+      color: white;
+      border-color: #007bff;
     }
-  }, [isDemoMode]);
+  }
+`;
 
-  // Fetch Prize Structures Function
-  const fetchPrizeStructures = useCallback(async () => {
-    setIsLoadingPrizes(true);
-    setPrizeError(null);
-    try {
-      let fetchedStructures;
-      if (isDemoMode) {
-        console.log("Demo Mode: Using mock prize structures (legacy format)");
-        fetchedStructures = {
-          daily: formatPrizeStructureForAPI(MOCK_PRIZE_STRUCTURES_LEGACY_FORMAT.daily, 'daily'),
-          saturday: formatPrizeStructureForAPI(MOCK_PRIZE_STRUCTURES_LEGACY_FORMAT.saturday, 'saturday'),
+const PrizeDisplay = styled.div`
+  background-color: #e9ecef;
+  padding: 15px;
+  border-radius: 8px;
+  h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  p {
+    margin: 5px 0;
+  }
+`;
+
+const ExecuteButtonContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+`;
+
+const WinnerDisplay = styled.div`
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-align: center;
+`;
+
+// --- Component --- 
+
+const DrawManagementRefactored: React.FC = () => {
+    // API function wrappers (with error handling)
+    const apiGetPrizeStructure = async (type: "DAILY" | "SATURDAY"): Promise<PrizeStructure> => {
+        // Simplified - add proper error handling/typing if service returns complex object
+        return getPrizeStructure({ draw_type: type }); 
+    };
+    const apiUpdatePrizeStructure = async (id: string, data: Partial<PrizeStructure>) => {
+        return updatePrizeStructure(id, data);
+    };
+    const apiScheduleDraw = async (data: any) => { // Replace any
+        return scheduleDraw(data);
+    };
+    const apiExecuteDraw = async (drawId: string) => {
+        return executeDraw(drawId);
+    };
+
+    // State variables based on prototype and requirements
+    const [selectedDate, setSelectedDate] = useState<Date | null>(new Date()); // Default to today
+    const [selectedDigits, setSelectedDigits] = useState<number[]>([]);
+    const [currentPrizeStructure, setCurrentPrizeStructure] = useState<PrizeStructure | null>(null);
+    // Remove rolloverAmount state, get it from selectedDrawDetails
+    // const [rolloverAmount, setRolloverAmount] = useState<number>(0);
+    const [scheduledDraws, setScheduledDraws] = useState<Draw[]>([]); // Full list for finding draw ID
+    const [selectedDrawDetails, setSelectedDrawDetails] = useState<Draw | null>(null); // Details for the selected date
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [drawStage, setDrawStage] = useState<DrawStage>("idle");
+    
+    const [winners, setWinners] = useState<Winner[]>([]);
+    const [jackpotWinner, setJackpotWinner] = useState<Winner | null>(null);
+
+    // State for Modals
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+    const [scheduleFormData, setScheduleFormData] = useState({ drawDate: "", drawType: "DAILY" }); // State for schedule form
+    const [isEditDailyModalOpen, setIsEditDailyModalOpen] = useState(false);
+    const [isEditSaturdayModalOpen, setIsEditSaturdayModalOpen] = useState(false);
+    const [prizeStructureToEdit, setPrizeStructureToEdit] = useState<PrizeStructure | null>(null);
+    // Add state for the edit form fields to make them controlled
+    const [editFormState, setEditFormState] = useState<Partial<PrizeStructure>>({});
+
+    // --- Derived State --- 
+    const selectedYear = selectedDate?.getFullYear();
+    const selectedMonth = selectedDate?.getMonth(); // 0-indexed
+    const selectedDay = selectedDate?.getDate();
+    const dayName = selectedDate ? getDayOfWeekName(selectedDate.getDay()) : "";
+
+    // --- Effects --- 
+
+    // Effect to update details when date changes
+    useEffect(() => {
+        if (selectedDate) {
+            const fetchDetails = async () => {
+                setIsLoading(true);
+                setError(null);
+                setSelectedDrawDetails(null); // Clear previous details
+                try {
+                    const dayIndex = selectedDate.getDay();
+                    const currentDayName = getDayOfWeekName(dayIndex);
+                    const recommended = getRecommendedDigits(currentDayName);
+                    setSelectedDigits(recommended); // Auto-select recommended digits
+
+                    const saturdayCheck = currentDayName === "Saturday";
+                    const drawType = saturdayCheck ? "SATURDAY" : "DAILY";
+                    // Use the corrected API call with draw_type
+                    const structure = await apiGetPrizeStructure(drawType);
+                    setCurrentPrizeStructure(structure);
+
+                    // Find the scheduled draw for the selected date to get rollover
+                    const dateString = selectedDate.toISOString().split("T")[0];
+                    const drawDetails = scheduledDraws.find(draw => 
+                        draw.drawDate.startsWith(dateString) && draw.status === "scheduled"
+                    );
+                    setSelectedDrawDetails(drawDetails || null);
+
+                } catch (err: any) {
+                    console.error("Error fetching prize structure or draw details:", err);
+                    setError(err.message || "Failed to fetch prize structure or draw details.");
+                    setCurrentPrizeStructure(null);
+                    setSelectedDrawDetails(null);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            fetchDetails();
+        } else {
+            // Clear details if no date is selected
+            setSelectedDigits([]);
+            setCurrentPrizeStructure(null);
+            setSelectedDrawDetails(null);
+        }
+    }, [selectedDate, scheduledDraws]); // Add scheduledDraws dependency
+
+    // Effect to fetch scheduled draws (needed to find draw ID for execution)
+    useEffect(() => {
+        const fetchScheduledDraws = async () => {
+            try {
+                // Assuming getDraws can filter by status or returns all
+                const allDraws = await getDraws({}); 
+                setScheduledDraws(allDraws.filter((d: Draw) => d.status === "scheduled"));
+            } catch (err) {
+                console.error("Failed to fetch scheduled draws:", err);
+                // Handle error appropriately
+            }
         };
-      } else {
-        console.log("Fetching prize structures from API...");
-        fetchedStructures = await drawService.getPrizeStructure();
-      }
-      setApiPrizeStructures(fetchedStructures);
-    } catch (err: any) {
-      console.error("Error fetching prize structures:", err);
-      setPrizeError(`Failed to fetch prize structures: ${err.message}. Editing may use defaults.`);
-      setApiPrizeStructures({
-          daily: formatPrizeStructureForAPI(MOCK_PRIZE_STRUCTURES_LEGACY_FORMAT.daily, 'daily'),
-          saturday: formatPrizeStructureForAPI(MOCK_PRIZE_STRUCTURES_LEGACY_FORMAT.saturday, 'saturday'),
-        });
-    } finally {
-      setIsLoadingPrizes(false);
-    }
-  }, [isDemoMode]);
+        fetchScheduledDraws();
+    }, []); // Fetch once on mount
 
-  // Initial Fetch for both Draws and Prizes
-  useEffect(() => {
-    fetchDraws();
-    fetchPrizeStructures();
-  }, [fetchDraws, fetchPrizeStructures]);
+    // --- Handlers --- 
+    const handleDateChange = (date: Date | null) => {
+        setSelectedDate(date);
+    };
 
-  // Apply Filters
-  useEffect(() => {
-    let result = draws;
-    if (filterDate) {
-      // Ensure comparison is done correctly (string vs string or Date vs Date)
-      const filterDateObj = new Date(filterDate);
-      result = result.filter(draw => new Date(draw.drawDate).toDateString() === filterDateObj.toDateString());
-    }
-    if (filterType) {
-      result = result.filter(draw => draw.drawType === filterType);
-    }
-    if (filterStatus) {
-      result = result.filter(draw => draw.status === filterStatus);
-    }
-    setFilteredDraws(result);
-  }, [filterDate, filterType, filterStatus, draws]);
-
-  // --- Event Handlers ---
-  const handleFilterChange = () => {
-    // Triggered by filter input changes, useEffect handles the filtering
-  };
-
-  const handleClearFilters = () => {
-    setFilterDate('');
-    setFilterType('');
-    setFilterStatus('');
-  };
-
-  const handleViewDetails = (draw: Draw) => {
-    setSelectedDraw(draw);
-    setIsDetailModalOpen(true);
-  };
-
-  const handleExecuteDraw = async (drawId: string) => {
-    if (!window.confirm('Are you sure you want to execute this draw? This action cannot be undone.')) {
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (isDemoMode) {
-        console.log(`Demo Mode: Simulating execution for draw ${drawId}`);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        // Update mock data, ensuring dates remain strings
-        const updatedMockDraws = draws.map(d =>
-          d.id === drawId ? { ...d, status: 'completed', executionLog: 'Demo draw executed successfully.', winners: MOCK_DRAWS[0].winners?.map(w => ({...w, winDate: '2024-05-01T10:00:00.000Z', createdAt: new Date().toISOString()})) } : d // Use d.id and fix winner mapping
+    const handleDigitToggle = (digit: number) => {
+        setSelectedDigits(prev => 
+            prev.includes(digit) ? prev.filter(d => d !== digit) : [...prev, digit]
         );
-        setDraws(updatedMockDraws);
-        // Apply filters again if necessary, or just update filteredDraws directly
-        setFilteredDraws(updatedMockDraws.filter(d => {
-            let match = true;
-            if (filterDate) match = match && new Date(d.drawDate).toDateString() === new Date(filterDate).toDateString();
-            if (filterType) match = match && d.drawType === filterType;
-            if (filterStatus) match = match && d.status === filterStatus;
-            return match;
-        }));
+    };
 
-      } else {
-        console.log(`Executing draw ${drawId} via API...`);
-        await drawService.executeDraw(drawId);
-        await fetchDraws(); // Re-fetch draws
-      }
-      alert('Draw executed successfully!');
-    } catch (err: any) {
-      console.error(`Error executing draw ${drawId}:`, err);
-      setError(`Failed to execute draw ${drawId}: ${err.message}`);
-      alert(`Failed to execute draw ${drawId}: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const handleSelectAllDigits = () => {
+        setSelectedDigits([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    };
 
-  const handleScheduleDraw = async () => {
-    if (!scheduleDate || !scheduleType || (!scheduleUseDefault && !scheduleDigits)) {
-      alert('Please fill in all required fields for scheduling.');
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    try {
-      const payload = {
-        draw_date: new Date(scheduleDate).toISOString().split('T')[0], // Send YYYY-MM-DD
-        draw_type: scheduleType.toUpperCase() as 'DAILY' | 'SATURDAY',
-        eligible_digits: scheduleUseDefault ? undefined : scheduleDigits.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)),
-        use_default: scheduleUseDefault,
-      };
-      if (isDemoMode) {
-        console.log("Demo Mode: Simulating schedule draw", payload);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const newDraw: Draw = {
-          id: `mock_draw_${Date.now()}`, // Use id instead of _id
-          drawDate: new Date(scheduleDate + 'T10:00:00Z').toISOString(), // Store as string
-          drawType: scheduleType as 'daily' | 'saturday',
-          status: 'scheduled',
-          eligibleDigits: scheduleUseDefault ? [] : scheduleDigits.split(",").map(d => parseInt(d.trim())).filter(n => !isNaN(n)), // Parse string to number[] or send empty array for default
-          jackpotAmount: scheduleType === 'daily' ? 1000000 : 5000000,
-          rolloverAmount: 0,
-          winners: [],
-          participantsPoolA: 0,
-          useDefault: scheduleUseDefault, // Added missing field
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        const updatedDraws = [newDraw, ...draws].sort((a, b) => new Date(b.drawDate).getTime() - new Date(a.drawDate).getTime());
-        setDraws(updatedDraws);
-        setFilteredDraws(updatedDraws); // Update filtered list too
-      } else {
-        console.log("Scheduling draw via API...", payload);
-        await drawService.scheduleDraw(payload);
-        await fetchDraws(); // Re-fetch draws
-      }
-      alert('Draw scheduled successfully!');
-      setIsScheduleModalOpen(false);
-      // Reset schedule form
-      setScheduleDate('');
-      setScheduleType('daily');
-      setScheduleDigits('');
-      setScheduleUseDefault(true);
-    } catch (err: any) {
-      console.error("Error scheduling draw:", err);
-      setError(`Failed to schedule draw: ${err.message}`);
-      alert(`Failed to schedule draw: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const handleClearDigits = () => {
+        setSelectedDigits([]);
+    };
 
-  const handleOpenPrizeModal = (type: 'daily' | 'saturday') => {
-    if (!apiPrizeStructures) {
-      setPrizeError("Prize structures not loaded yet. Please wait or try refreshing.");
-      return;
-    }
-    setEditingPrizeType(type);
-    // Convert the specific structure from API format (array) to UI format (object)
-    const structureToEdit = type === 'daily' ? apiPrizeStructures.daily : apiPrizeStructures.saturday;
-    setEditablePrizesUI(formatPrizeStructureForUI(structureToEdit));
-    setIsPrizeModalOpen(true);
-  };
+    const handleExecuteDraw = async () => {
+        if (!selectedDate) {
+            setError("Please select a draw date.");
+            return;
+        }
+        if (selectedDigits.length === 0) {
+            setError("Please select at least one eligible digit.");
+            return;
+        }
 
-  const handlePrizeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditablePrizesUI((prev: any) => ({ ...prev, [name]: value }));
-  };
+        // Find the scheduled draw matching the selected date
+        const dateString = selectedDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+        const drawToExecute = scheduledDraws.find(draw => 
+            draw.drawDate.startsWith(dateString) && draw.status === "scheduled"
+        );
 
-  const handleSavePrizeStructure = async () => {
-    if (!editingPrizeType || !editablePrizesUI) return;
+        if (!drawToExecute) {
+            setError(`No scheduled draw found for ${dateString}. Please schedule one first.`);
+            return;
+        }
 
-    setIsLoadingPrizes(true);
-    setPrizeError(null);
-    try {
-      // Convert UI format back to API payload format (array)
-      const apiPayload = formatPrizeStructureForAPI(editablePrizesUI, editingPrizeType);
+        setIsLoading(true);
+        setError(null);
+        setDrawStage("loading");
+        setWinners([]);
+        setJackpotWinner(null);
 
-      if (isDemoMode) {
-        console.log(`Demo Mode: Simulating update prize structure for ${editingPrizeType}`, apiPayload);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // Update the mock structure locally
-        setApiPrizeStructures(prev => prev ? {
-          ...prev,
-          [editingPrizeType]: apiPayload
-        } : null);
-      } else {
-        console.log(`Updating prize structure for ${editingPrizeType} via API...`, apiPayload);
-        await drawService.updatePrizeStructure({ drawType: editingPrizeType, prizes: apiPayload }); // Correct signature: pass single object
-        await fetchPrizeStructures(); // Re-fetch to confirm
-      }
-      alert('Prize structure updated successfully!');
-      setIsPrizeModalOpen(false);
-      setEditingPrizeType(null);
-      setEditablePrizesUI(null);
-    } catch (err: any) {
-      console.error(`Error updating prize structure for ${editingPrizeType}:`, err);
-      setPrizeError(`Failed to update prize structure: ${err.message}`);
-      alert(`Failed to update prize structure: ${err.message}`);
-    } finally {
-      setIsLoadingPrizes(false);
-    }
-  };
+        try {
+            // TODO: Implement spinning animation component here
+            setDrawStage("spinning");
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate spinning
 
-  // --- Render --- 
-  return (
-    <PageLayout title="Draw Management">
-      <Container>
-        <Header>
-          <Title>Draw Management</Title>
-          <div>
-            <Button onClick={() => handleOpenPrizeModal('daily')} disabled={isLoadingPrizes}><FaEdit /> Edit Daily Prizes</Button>
-            <Button onClick={() => handleOpenPrizeModal('saturday')} disabled={isLoadingPrizes} style={{ marginLeft: '10px' }}><FaEdit /> Edit Saturday Prizes</Button>
-            <Button onClick={() => setIsScheduleModalOpen(true)} style={{ marginLeft: '10px' }}><FaCalendarAlt /> Schedule New Draw</Button>
-          </div>
-        </Header>
+            // Execute the draw using the found draw ID
+            const result = await apiExecuteDraw(drawToExecute.id);
+            
+            // TODO: Implement revealing animation component here
+            setDrawStage("revealing");
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate reveal delay
 
-        <Card>
-          <Controls>
-            <DatePicker value={filterDate} onChange={e => setFilterDate(e.target.value)} />
-            <Select value={filterType} onChange={e => setFilterType(e.target.value)}>
-              <option value="">All Types</option>
-              <option value="daily">Daily</option>
-              <option value="saturday">Saturday</option>
-            </Select>
-            <Select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-              <option value="">All Statuses</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="running">Running</option>
-              <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
-            </Select>
-            <Button onClick={handleClearFilters} variant="secondary"><FaFilter /> Clear Filters</Button>
-          </Controls>
+            // Assuming API returns winners array, find jackpot winner
+            const allWinners: Winner[] = result.winners || []; // Adjust based on actual API response
+            const jackpot = allWinners.find(w => w.prizeTier === "Jackpot"); // Adjust prizeTier name if needed
+            
+            setWinners(allWinners);
+            setJackpotWinner(jackpot || null);
+            setDrawStage("complete");
 
-          {isLoading && <LoadingSpinner />} 
-          {error && <p style={{ color: 'red' }}>{error}</p>}
+            // Refresh scheduled draws list after execution
+            const updatedDraws = await getDraws({}); 
+            setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
 
-          {!isLoading && (
-            <Table>
-              <thead>
-                <tr>
-                  <Th>Draw Date</Th>
-                  <Th>Type</Th>
-                  <Th>Status</Th>
-                  <Th>Eligible Digits</Th>
-                  <Th>Jackpot (₦)</Th>
-                  <Th>Rollover (₦)</Th>
-                  <Th>Winners</Th>
-                  <Th>Actions</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredDraws.map((draw) => (
-                  <Tr key={draw.id}>
-                    <Td>{new Date(draw.drawDate).toLocaleString()}</Td>
-                    <Td>{draw.drawType}</Td>
-                    <Td><StatusBadge status={draw.status}>{draw.status}</StatusBadge></Td>
-                    <Td>{draw.eligibleDigits}</Td>
-                    <Td>{draw.jackpotAmount?.toLocaleString()}</Td>
-                    <Td>{draw.rolloverAmount?.toLocaleString()}</Td>
-                    <Td>{draw.winners?.length ?? 0}</Td>
-                    <Td>
-                      <IconButton onClick={() => handleViewDetails(draw)} title="View Details"><FaTrophy /></IconButton>
-                      {draw.status === 'scheduled' && (
-                        <IconButton onClick={() => handleExecuteDraw(draw.id)} title="Execute Draw" disabled={isLoading}><FaPlay /></IconButton>
-                      )}
-                      {/* Add other actions like cancel if needed */}
-                    </Td>
-                  </Tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </Card>
+        } catch (err: any) {
+            console.error("Error executing draw:", err);
+            const apiError = err.response?.data?.message || err.message || "Failed to execute draw.";
+            setError(`Failed to execute draw ${drawToExecute.id}: ${apiError} (Status: ${err.response?.status || "N/A"})`);
+            setDrawStage("error");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-        {/* Draw Detail Modal */}
-        {isDetailModalOpen && selectedDraw && (
-          <ModalOverlay onClick={() => setIsDetailModalOpen(false)}>
-            <ModalContent onClick={(e) => e.stopPropagation()}>
-              <ModalHeader>Draw Details - {new Date(selectedDraw.drawDate).toLocaleDateString()}</ModalHeader>
-              <p><strong>ID:</strong> {selectedDraw.id}</p>
-              <p><strong>Type:</strong> {selectedDraw.drawType}</p>
-              <p><strong>Status:</strong> <StatusBadge status={selectedDraw.status}>{selectedDraw.status}</StatusBadge></p>
-              <p><strong>Eligible Digits:</strong> {selectedDraw.eligibleDigits}</p>
-              <p><strong>Jackpot Amount:</strong> ₦{selectedDraw.jackpotAmount?.toLocaleString()}</p>
-              <p><strong>Rollover Amount:</strong> ₦{selectedDraw.rolloverAmount?.toLocaleString()}</p>
-              <p><strong>Pool A Participants:</strong> {selectedDraw.participantsPoolA ?? 'N/A'}</p>
-              <p><strong>Pool B Participants:</strong> {selectedDraw.participantsPoolB ?? 'N/A'}</p>
-              <p><strong>Jackpot Winner Validation:</strong> {selectedDraw.jackpotWinnerValidationStatus ?? 'N/A'}</p>
-              
-              {selectedDraw.errorMessage && (
-                  <div>
-                      <strong>Error Message:</strong>
-                      <LogContainer>{selectedDraw.errorMessage}</LogContainer>
-                  </div>
-              )}
-              {selectedDraw.executionLog && (
-                  <div>
-                      <strong>Execution Log:</strong>
-                      <LogContainer>{selectedDraw.executionLog}</LogContainer>
-                  </div>
-              )}
+    // --- More handlers needed for modals, prize updates etc. --- 
 
-              <strong>Winners ({selectedDraw.winners?.length ?? 0}):</strong>
-              {selectedDraw.winners && selectedDraw.winners.length > 0 ? (
-                <WinnerList>
-                  {selectedDraw.winners.map(winner => (
-                    <WinnerItem key={winner.id}>
-                      {winner.prizeCategory.toUpperCase()}: {maskMsisdn(winner.msisdn)} - ₦{winner.prizeAmount.toLocaleString()} ({winner.claimStatus})
-                    </WinnerItem>
-                  ))}
-                </WinnerList>
-              ) : (
-                <p>No winners selected for this draw.</p>
-              )}
+    const openEditPrizeModal = async (type: "DAILY" | "SATURDAY") => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const structure = await apiGetPrizeStructure(type);
+            setPrizeStructureToEdit(structure); // Keep original structure for reference/ID
+            setEditFormState({ // Populate form state
+                jackpot: structure.jackpot,
+                second: structure.second,
+                third: structure.third,
+                consolation: structure.consolation,
+                consolationCount: structure.consolationCount,
+            });
+            if (type === "DAILY") {
+                setIsEditDailyModalOpen(true);
+            } else {
+                setIsEditSaturdayModalOpen(true);
+            }
+        } catch (err: any) {
+            console.error(`Error fetching ${type} prize structure for edit:`, err);
+            setError(err.message || `Failed to fetch ${type} prize structure.`);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-              <ModalFooter>
-                <Button onClick={() => setIsDetailModalOpen(false)}>Close</Button>
-              </ModalFooter>
-            </ModalContent>
-          </ModalOverlay>
-        )}
+    const handleUpdatePrizeStructure = async () => {
+        if (!prizeStructureToEdit) return;
+        setIsLoading(true);
+        setError(null);
+        try {
+            // Construct the payload using the ID from the original structure and data from the form state
+            const payload: PrizeStructure = {
+                ...prizeStructureToEdit, // Keep ID, type, etc.
+                jackpot: editFormState.jackpot || 0,
+                second: editFormState.second || 0,
+                third: editFormState.third || 0,
+                consolation: editFormState.consolation || 0,
+                consolationCount: editFormState.consolationCount || 0,
+            };
+            await apiUpdatePrizeStructure(prizeStructureToEdit.id, payload);
+            // Close modals and potentially refresh structure display
+            setIsEditDailyModalOpen(false);
+            setIsEditSaturdayModalOpen(false);
+            setPrizeStructureToEdit(null);
+            setEditFormState({}); // Clear form state
+            // Re-fetch current structure if it was the one edited
+            if (selectedDate) {
+                const dayIndex = selectedDate.getDay();
+                const isSat = getDayOfWeekName(dayIndex) === "Saturday";
+                const currentType = isSat ? "SATURDAY" : "DAILY";
+                if (payload.type === currentType) { // Check against payload type
+                    const structure = await apiGetPrizeStructure(currentType);
+                    setCurrentPrizeStructure(structure);
+                }
+            }
+            // alert("Prize structure updated successfully!"); // Replace with better notification
+            showNotification("success", "Prize structure updated successfully!");
+        } catch (err: any) {
+            console.error("Error updating prize structure:", err);
+            const apiError = err.message || "Failed to update prize structure.";
+            setError(apiError);
+            showNotification("error", apiError);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-        {/* Schedule Draw Modal */}
-        {isScheduleModalOpen && (
-          <ModalOverlay onClick={() => setIsScheduleModalOpen(false)}>
-            <ModalContent onClick={(e) => e.stopPropagation()}>
-              <ModalHeader>Schedule New Draw</ModalHeader>
-              <div>
-                <label>Draw Date:</label>
-                <DatePicker value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} required />
-              </div>
-              <div style={{ marginTop: '10px' }}>
-                <label>Draw Type:</label>
-                <Select value={scheduleType} onChange={e => setScheduleType(e.target.value)} required>
-                  <option value="daily">Daily</option>
-                  <option value="saturday">Saturday</option>
-                </Select>
-              </div>
-              <div style={{ marginTop: '10px' }}>
-                <label style={{ display: 'flex', alignItems: 'center' }}>
-                  Use Default Eligible Digits:
-                  <Switch 
-                    isActive={scheduleUseDefault} 
-                    onToggle={() => setScheduleUseDefault(!scheduleUseDefault)} 
-                  />
-                </label>
-              </div>
-              {!scheduleUseDefault && (
-                <div style={{ marginTop: '10px' }}>
-                  <label>Eligible Digits (comma-separated):</label>
-                  <FilterInput 
-                    value={scheduleDigits} 
-                    onChange={e => setScheduleDigits(e.target.value)} 
-                    placeholder="e.g., 1, 5, 9" 
-                    required={!scheduleUseDefault}
-                  />
-                </div>
-              )}
-              <ModalFooter>
-                <Button onClick={() => setIsScheduleModalOpen(false)} variant="secondary">Cancel</Button>
-                <Button onClick={handleScheduleDraw} disabled={isLoading}>Schedule Draw</Button>
-              </ModalFooter>
-            </ModalContent>
-          </ModalOverlay>
-        )}
+    const handleScheduleDraw = async (formData: typeof scheduleFormData) => { 
+        setIsLoading(true);
+        setError(null);
+        try {
+            // TODO: Validate formData (e.g., ensure date is selected)
+            if (!formData.drawDate) {
+                throw new Error("Draw date is required.");
+            }
+            const payload = {
+                drawDate: new Date(formData.drawDate).toISOString(), // Ensure ISO format
+                type: formData.drawType,
+                // Add any other required fields from API spec
+            };
+            await apiScheduleDraw(payload);
+            setIsScheduleModalOpen(false);
+            setScheduleFormData({ drawDate: "", drawType: "DAILY" }); // Reset form
+            // Refresh scheduled draws list
+            const updatedDraws = await getDraws({}); 
+            setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
+            // alert("Draw scheduled successfully!"); // Replace with better notification
+            showNotification("success", "Draw scheduled successfully!");
+        } catch (err: any) {
+            console.error("Error scheduling draw:", err);
+             // Check if the error response has more details
+            const apiError = err.response?.data?.message || err.message || "Failed to schedule draw.";
+            setError(`Failed to schedule draw: ${apiError} (Status: ${err.response?.status || "N/A"})`);
+            showNotification("error", `Failed to schedule draw: ${apiError}`);
+            // Keep modal open on error?
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-        {/* Edit Prize Structure Modal */}
-        {isPrizeModalOpen && editingPrizeType && editablePrizesUI && (
-          <ModalOverlay onClick={() => setIsPrizeModalOpen(false)}>
-            <ModalContent onClick={(e) => e.stopPropagation()}>
-              <ModalHeader>Edit {editingPrizeType === 'daily' ? 'Daily' : 'Saturday'} Prize Structure</ModalHeader>
-              {isLoadingPrizes && <LoadingSpinner />}
-              {prizeError && <p style={{ color: 'red' }}>{prizeError}</p>}
-              {!isLoadingPrizes && (
-                <>
-                  {/* Dynamically create inputs based on expected categories */}
-                  {Object.keys(editablePrizesUI).map(category => (
-                     <div key={category} style={{ marginBottom: '10px' }}>
-                       <label style={{ textTransform: 'capitalize', marginRight: '10px' }}>{category}:</label>
-                       <FilterInput 
-                         name={category} 
-                         value={editablePrizesUI[category] || ''} 
-                         onChange={handlePrizeInputChange} 
-                         placeholder={category === 'consolation' ? 'e.g., ₦5,000 x 7 winners' : 'e.g., ₦1,000,000'} 
-                       />
-                     </div>
-                  ))}
-                  {/* Add button to add new prize category if needed */}
-                  {/* <Button size="small" onClick={handleAddPrizeCategory}><FaPlusCircle /> Add Category</Button> */}
-                  <ModalFooter>
-                    <Button onClick={() => setIsPrizeModalOpen(false)} variant="secondary">Cancel</Button>
-                    <Button onClick={handleSavePrizeStructure} disabled={isLoadingPrizes}>Save Changes</Button>
-                  </ModalFooter>
-                </>
-              )}
-            </ModalContent>
-          </ModalOverlay>
-        )}
+    return (
+        <PageLayout title="Draw Management">
+            <ToastContainer /> {/* Add ToastContainer here */}
+            <Container>
+                {/* Admin Buttons (Edit Prizes, Schedule) - Placed at top-right */} 
+                <AdminButtons>
+                    <Button 
+                        variant="warning" 
+                        onClick={() => openEditPrizeModal("DAILY")}
+                        icon={<FaTrophy />}
+                    >
+                        Edit Daily Prizes
+                    </Button>
+                    <Button 
+                        variant="warning" 
+                        onClick={() => openEditPrizeModal("SATURDAY")}
+                        icon={<FaTrophy />}
+                    >
+                        Edit Saturday Prizes
+                    </Button>
+                    <Button 
+                        variant="primary" 
+                        onClick={() => setIsScheduleModalOpen(true)}
+                        icon={<FaCalendarAlt />}
+                    >
+                        Schedule New Draw
+                    </Button>
+                </AdminButtons>
 
-      </Container>
-    </PageLayout>
-  );
+                {/* Main Draw Configuration Area */} 
+                <DrawConfigArea>
+                    {/* Date Selection */} 
+                    <ConfigSection>
+                        <label htmlFor="drawDate">Select Draw Date:</label>
+                        <DatePicker 
+                            selected={selectedDate}
+                            onChange={handleDateChange}
+                            dateFormat="yyyy/MM/dd"
+                            id="drawDate"
+                            // Add any other desired props (minDate, maxDate, etc.)
+                        />
+                        {dayName && <p>Day: {dayName}</p>}
+                    </ConfigSection>
+
+                    {/* Digit Selection */} 
+                    <ConfigSection>
+                        <label>Eligible Ending Digits:</label>
+                        <DigitSelector>
+                            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(digit => (
+                                <button 
+                                    key={digit} 
+                                    onClick={() => handleDigitToggle(digit)}
+                                    className={selectedDigits.includes(digit) ? "selected" : ""}
+                                >
+                                    {digit}
+                                </button>
+                            ))}
+                        </DigitSelector>
+                        <div>
+                            <Button onClick={handleSelectAllDigits} size="small" variant="secondary">Select All</Button>
+                            <Button onClick={handleClearDigits} size="small" variant="secondary">Clear</Button>
+                        </div>
+                    </ConfigSection>
+
+                    {/* Prize Structure Display */} 
+                    <ConfigSection>
+                        <label>Prize Structure ({currentPrizeStructure?.type || "N/A"}):</label>
+                        {isLoading && <p>Loading structure...</p>} {/* Added loading indicator */}
+                        {!isLoading && currentPrizeStructure ? (
+                            <PrizeDisplay>
+                                <h4>{currentPrizeStructure.type} Prizes</h4>
+                                <p>Jackpot: ₦{currentPrizeStructure.jackpot?.toLocaleString()}</p>
+                                <p>Second: ₦{currentPrizeStructure.second?.toLocaleString()}</p>
+                                <p>Third: ₦{currentPrizeStructure.third?.toLocaleString()}</p>
+                                <p>Consolation: ₦{currentPrizeStructure.consolation?.toLocaleString()} (x{currentPrizeStructure.consolationCount})</p>
+                                {/* Use rollover from selectedDrawDetails */} 
+                                <p><strong>Rollover: ₦{(selectedDrawDetails?.rollover || 0).toLocaleString()}</strong></p> 
+                            </PrizeDisplay>
+                        ) : (
+                            !isLoading && <p>Select a date to view prize structure.</p>
+                        )}
+                    </ConfigSection>
+                </DrawConfigArea>
+
+                {/* Execute Draw Button */} 
+                <ExecuteButtonContainer>
+                    <Button 
+                        variant="success" 
+                        size="large" 
+                        onClick={handleExecuteDraw} 
+                        disabled={isLoading || drawStage === "spinning" || drawStage === "revealing" || !selectedDate || selectedDigits.length === 0}
+                        icon={<FaPlay />}
+                    >
+                        {isLoading ? "Processing..." : "Execute Draw"}
+                    </Button>
+                </ExecuteButtonContainer>
+
+                {/* Error Display */} 
+                {error && <p style={{ color: "red", textAlign: "center" }}>Error: {error}</p>}
+
+                {/* Winner Display Area */} 
+                {(drawStage === "spinning" || drawStage === "revealing" || drawStage === "complete") && (
+                    <WinnerDisplay>
+                        {drawStage === "spinning" && <p>Spinning Animation Component Here...</p>} 
+                        {drawStage === "revealing" && <p>Revealing Animation Component Here...</p>} 
+                        {drawStage === "complete" && (
+                            <>
+                                <h3>Draw Complete!</h3>
+                                {jackpotWinner ? (
+                                    <div>
+                                        <h4>Jackpot Winner!</h4>
+                                        {/* Mask MSISDN: Show first 3 and last 3 digits */}
+                                        <p>MSISDN: {jackpotWinner.msisdn.substring(0, 3)}...{jackpotWinner.msisdn.substring(jackpotWinner.msisdn.length - 3)}</p> 
+                                        <p>Prize: ₦{jackpotWinner.prizeAmount?.toLocaleString()}</p>
+                                        {/* TODO: Add other winner details like opt-in status if available */}
+                                    </div>
+                                ) : (
+                                    <p>No Jackpot winner found.</p>
+                                )}
+                                {winners.length > (jackpotWinner ? 1 : 0) && (
+                                    <div>
+                                        <h4>Other Winners ({winners.filter(w => w.id !== jackpotWinner?.id).length}):</h4>
+                                        <ul style={{ listStyle: "none", padding: 0, maxHeight: "200px", overflowY: "auto" }}>
+                                            {winners.filter(w => w.id !== jackpotWinner?.id).map(w => (
+                                                <li key={w.id} style={{ borderBottom: "1px solid #eee", padding: "5px 0" }}>
+                                                    {w.msisdn.substring(0, 3)}...{w.msisdn.substring(w.msisdn.length - 3)} - {w.prizeTier} (₦{w.prizeAmount?.toLocaleString()})
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </WinnerDisplay>
+                )}
+
+                {/* Modals */} 
+                <Modal 
+                    isOpen={isScheduleModalOpen} 
+                    onClose={() => setIsScheduleModalOpen(false)} 
+                    title="Schedule New Draw"
+                >
+                    {/* Schedule Draw Form Implementation */}
+                    <div>
+                        <label>Draw Date: 
+                            <input 
+                                type="datetime-local" 
+                                value={scheduleFormData.drawDate}
+                                onChange={e => setScheduleFormData({...scheduleFormData, drawDate: e.target.value})}
+                            />
+                        </label>
+                        <label>Draw Type: 
+                            <select 
+                                value={scheduleFormData.drawType}
+                                onChange={e => setScheduleFormData({...scheduleFormData, drawType: e.target.value as ("DAILY" | "SATURDAY")})}
+                            > 
+                                <option value="DAILY">Daily</option>
+                                <option value="SATURDAY">Saturday</option>
+                            </select>
+                        </label>
+                        {/* Add other necessary fields based on API requirements */}
+                        <Button onClick={() => handleScheduleDraw(scheduleFormData)} variant="primary" disabled={isLoading}>{isLoading ? "Scheduling..." : "Schedule"}</Button> 
+                        <Button onClick={() => setIsScheduleModalOpen(false)} variant="secondary">Cancel</Button>
+                    </div>
+                    {error && <p style={{ color: "red" }}>Error: {error}</p>} {/* Show error within modal */} 
+                </Modal>
+
+                <Modal 
+                    isOpen={isEditDailyModalOpen} 
+                    onClose={() => setIsEditDailyModalOpen(false)} 
+                    title="Edit Daily Prize Structure"
+                >
+                    {/* Edit Prize Form Implementation */}
+                    {prizeStructureToEdit && prizeStructureToEdit.type === "DAILY" && (
+                        <div>
+                            {/* Use controlled components */}
+                            <label>Jackpot: <input type="number" value={editFormState.jackpot || ""} onChange={e => setEditFormState({...editFormState, jackpot: parseInt(e.target.value) || 0})} /></label>
+                            <label>Second: <input type="number" value={editFormState.second || ""} onChange={e => setEditFormState({...editFormState, second: parseInt(e.target.value) || 0})} /></label>
+                            <label>Third: <input type="number" value={editFormState.third || ""} onChange={e => setEditFormState({...editFormState, third: parseInt(e.target.value) || 0})} /></label>
+                            <label>Consolation: <input type="number" value={editFormState.consolation || ""} onChange={e => setEditFormState({...editFormState, consolation: parseInt(e.target.value) || 0})} /></label>
+                            <label>Consolation Count: <input type="number" value={editFormState.consolationCount || ""} onChange={e => setEditFormState({...editFormState, consolationCount: parseInt(e.target.value) || 0})} /></label>
+                            <Button onClick={handleUpdatePrizeStructure} variant="primary" disabled={isLoading}>{isLoading ? "Saving..." : "Save Changes"}</Button>
+                            <Button onClick={() => setIsEditDailyModalOpen(false)} variant="secondary">Cancel</Button>
+                        </div>
+                    )}
+                    {error && <p style={{ color: "red" }}>Error: {error}</p>} {/* Show error within modal */} 
+                </Modal>
+
+                <Modal 
+                    isOpen={isEditSaturdayModalOpen} 
+                    onClose={() => setIsEditSaturdayModalOpen(false)} 
+                    title="Edit Saturday Prize Structure"
+                >
+                    {/* Edit Prize Form Implementation */}
+                     {prizeStructureToEdit && prizeStructureToEdit.type === "SATURDAY" && (
+                        <div>
+                            {/* Use controlled components */}
+                            <label>Jackpot: <input type="number" value={editFormState.jackpot || ""} onChange={e => setEditFormState({...editFormState, jackpot: parseInt(e.target.value) || 0})} /></label>
+                            <label>Second: <input type="number" value={editFormState.second || ""} onChange={e => setEditFormState({...editFormState, second: parseInt(e.target.value) || 0})} /></label>
+                            <label>Third: <input type="number" value={editFormState.third || ""} onChange={e => setEditFormState({...editFormState, third: parseInt(e.target.value) || 0})} /></label>
+                            <label>Consolation: <input type="number" value={editFormState.consolation || ""} onChange={e => setEditFormState({...editFormState, consolation: parseInt(e.target.value) || 0})} /></label>
+                            <label>Consolation Count: <input type="number" value={editFormState.consolationCount || ""} onChange={e => setEditFormState({...editFormState, consolationCount: parseInt(e.target.value) || 0})} /></label>
+                            <Button onClick={handleUpdatePrizeStructure} variant="primary" disabled={isLoading}>{isLoading ? "Saving..." : "Save Changes"}</Button>
+                            <Button onClick={() => setIsEditSaturdayModalOpen(false)} variant="secondary">Cancel</Button>
+                        </div>
+                    )}
+                    {error && <p style={{ color: "red" }}>Error: {error}</p>} {/* Show error within modal */} 
+                </Modal>
+
+            </Container>
+        </PageLayout>
+    );
 };
 
-export default DrawManagement;
-
+export default DrawManagementRefactored;
 
 
 
