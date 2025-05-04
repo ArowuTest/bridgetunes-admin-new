@@ -89,7 +89,7 @@ const formatPrizeStructureForUI = (prizes: Prize[]) => {
   const uiStructure: any = {};
   prizes.forEach(prize => {
     if (prize.category === 'consolation') {
-      uiStructure[prize.category] = `₦${prize.amount.toLocaleString()} x ${prize.count} winners`;
+      uiStructure[prize.category] = `₦${prize.amount.toLocaleString()} x ${prize.numWinners || 1} winners`; // Use numWinners
     } else if (prize.category === 'jackpot' || prize.category === 'second' || prize.category === 'third') {
       uiStructure[prize.category] = `₦${prize.amount.toLocaleString()}`;
     }
@@ -107,13 +107,13 @@ const formatPrizeStructureForAPI = (uiStructure: any, drawType: 'daily' | 'satur
   const parseAmount = (value: string | undefined): number => parseInt(value?.replace(/[^0-9]/g, '') || '0');
 
   if (uiStructure.jackpot) {
-    prizes.push({ category: 'jackpot', amount: parseAmount(uiStructure.jackpot), count: 1 });
+    prizes.push({ category: 'jackpot', amount: parseAmount(uiStructure.jackpot), numWinners: 1 }); // Use numWinners
   }
   if (uiStructure.second) {
-    prizes.push({ category: 'second', amount: parseAmount(uiStructure.second), count: 1 });
+    prizes.push({ category: 'second', amount: parseAmount(uiStructure.second), numWinners: 1 }); // Use numWinners
   }
   if (uiStructure.third) {
-    prizes.push({ category: 'third', amount: parseAmount(uiStructure.third), count: 1 });
+    prizes.push({ category: 'third', amount: parseAmount(uiStructure.third), numWinners: 1 }); // Use numWinners
   }
   if (uiStructure.consolation) {
     const amountMatch = uiStructure.consolation.match(/₦([0-9,]+)/)?.[1];
@@ -121,11 +121,11 @@ const formatPrizeStructureForAPI = (uiStructure: any, drawType: 'daily' | 'satur
     prizes.push({
       category: 'consolation',
       amount: parseAmount(amountMatch),
-      count: parseInt(countMatch || '0')
+      numWinners: parseInt(countMatch || '0') // Use numWinners
     });
   }
 
-  return prizes.filter(p => p.amount > 0 && p.count > 0); // Filter out invalid entries
+  return prizes.filter(p => p.amount > 0 && p.numWinners && p.numWinners > 0); // Filter out invalid entries, use numWinners
 };
 
 // Helper function to mask MSISDN (e.g., 234803****567)
@@ -813,4 +813,6 @@ const DrawManagement: React.FC = () => {
 };
 
 export default DrawManagement;
+
+
 
