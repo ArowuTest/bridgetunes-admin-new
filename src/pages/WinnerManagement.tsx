@@ -11,10 +11,10 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 // --- Mock Data (For Demo Mode) ---
 const MOCK_WINNERS: Winner[] = [
-  { id: 'win1', msisdn: '2348031234567', prizeCategory: 'jackpot', prizeAmount: 1000000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Pending', createdAt: new Date().toISOString() },
-  { id: 'win2', msisdn: '2348037654321', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Paid', createdAt: new Date().toISOString() },
-  { id: 'win3', msisdn: '2349098765432', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Pending', createdAt: new Date().toISOString() },
-  { id: 'win4', msisdn: '2347061112222', prizeCategory: 'jackpot', prizeAmount: 5000000, drawId: 'draw3', winDate: new Date('2024-05-04T10:00:00Z').toISOString(), claimStatus: 'Failed', createdAt: new Date().toISOString() }, // Example Saturday winner
+  { id: 'win1', msisdn: '2348031234567', prizeCategory: 'jackpot', prizeAmount: 1000000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Pending', createdAt: new Date().toISOString(), isOptedIn: true, isValid: true },
+  { id: 'win2', msisdn: '2348037654321', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Paid', createdAt: new Date().toISOString(), isOptedIn: true, isValid: true },
+  { id: 'win3', msisdn: '2349098765432', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Pending', createdAt: new Date().toISOString(), isOptedIn: true, isValid: true },
+  { id: 'win4', msisdn: '2347061112222', prizeCategory: 'jackpot', prizeAmount: 5000000, drawId: 'draw3', winDate: new Date('2024-05-04T10:00:00Z').toISOString(), claimStatus: 'Failed', createdAt: new Date().toISOString(), isOptedIn: true, isValid: true }, // Example Saturday winner
 ];
 
 // --- Styled Components (reuse or adapt from DrawManagement) ---
@@ -142,11 +142,11 @@ const WinnerManagement: React.FC = () => {
         console.log("Demo Mode: Using mock winners");
         // Apply basic filtering to mock data for demo
         fetchedWinners = MOCK_WINNERS.filter(w => {
-          const drawDate = new Date(w.drawDate);
+          const winDate = new Date(w.winDate); // Use winDate
           const start = filters.startDate ? new Date(filters.startDate) : null;
           const end = filters.endDate ? new Date(filters.endDate) : null;
-          if (start && drawDate < start) return false;
-          if (end && drawDate > end) return false;
+          if (start && winDate < start) return false; // Use winDate
+          if (end && winDate > end) return false; // Use winDate
           if (filters.status && w.claimStatus !== filters.status) return false;
           // Note: Mock data doesn't have drawType, so can't filter by it in demo
           return true;
@@ -156,7 +156,7 @@ const WinnerManagement: React.FC = () => {
         fetchedWinners = await winnerService.getWinners(filters);
       }
       // Sort by date descending
-      fetchedWinners.sort((a, b) => new Date(b.drawDate).getTime() - new Date(a.drawDate).getTime());
+      fetchedWinners.sort((a, b) => new Date(b.winDate).getTime() - new Date(a.winDate).getTime()); // Use winDate
       setWinners(fetchedWinners);
       setFilteredWinners(fetchedWinners); // Initially show all fetched
     } catch (err: any) {
@@ -193,8 +193,8 @@ const WinnerManagement: React.FC = () => {
       if (isDemoMode) {
         console.log(`Demo Mode: Simulating update status to ${newStatus} for winner ${winnerId}`);
         await new Promise(resolve => setTimeout(resolve, 500));
-        setWinners(prev => prev.map(w => w._id === winnerId ? { ...w, claimStatus: newStatus } : w));
-        setFilteredWinners(prev => prev.map(w => w._id === winnerId ? { ...w, claimStatus: newStatus } : w));
+        setWinners(prev => prev.map(w => w.id === winnerId ? { ...w, claimStatus: newStatus } : w)); // Use id
+        setFilteredWinners(prev => prev.map(w => w.id === winnerId ? { ...w, claimStatus: newStatus } : w)); // Use id
       } else {
         console.log(`Updating status for winner ${winnerId} to ${newStatus} via API...`);
         await winnerService.updateWinnerStatus(winnerId, newStatus);
@@ -224,7 +224,7 @@ const WinnerManagement: React.FC = () => {
 
   // --- Render ---
   return (
-    <PageLayout>
+    <PageLayout title="Winner Management">
       <Container>
         <Header>
           <Title>Winner Management</Title>
@@ -270,8 +270,8 @@ const WinnerManagement: React.FC = () => {
             <tbody>
               {filteredWinners.length > 0 ? (
                 filteredWinners.map((winner) => (
-                  <Tr key={winner._id}>
-                    <Td>{formatDateTime(winner.drawDate)}</Td>
+                  <Tr key={winner.id}>
+                    <Td>{formatDateTime(winner.winDate)}</Td> // Use winDate
                     {/* Display full MSISDN here */}
                     <Td>{winner.msisdn}</Td>
                     <Td>{winner.prizeCategory}</Td>
@@ -329,6 +329,8 @@ const WinnerManagement: React.FC = () => {
 };
 
 export default WinnerManagement;
+
+
 
 
 
