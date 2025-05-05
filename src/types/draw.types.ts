@@ -1,67 +1,75 @@
-import React from 'react';
-import styled from 'styled-components';
-
-interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-  children: React.ReactNode;
+export interface Draw {
+  id: string;
+  name: string;
+  date: string;
+  status: string;
+  participants: number;
+  winners: number;
+  totalPrize: number;
+  filterCriteria?: {
+    days: string[];
+    endingDigits: number[];
+  };
+  winningNumbers?: string[];
+  createdAt: string;
+  updatedAt?: string;
+  scheduledFor?: string;
+  completedAt?: string;
 }
 
-const ModalOverlay = styled.div<{ isOpen: boolean }>`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7); /* Darker overlay */
-  display: ${props => (props.isOpen ? 'flex' : 'none')};
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-`;
+export interface DrawParticipant {
+  id: string;
+  drawId: string;
+  msisdn: string;
+  amount: number;
+  isWinner: boolean;
+  prize?: number;
+  date: string;
+}
 
-const ModalContent = styled.div`
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  min-width: 300px;
-  max-width: 600px;
-  position: relative;
-`;
+export interface DrawCreationRequest {
+  name: string;
+  date: string;
+  filterCriteria?: {
+    days: string[];
+    endingDigits: number[];
+  };
+  scheduledFor?: string;
+}
 
-const CloseButton = styled.button`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-`;
+export interface DrawUpdateRequest {
+  id: string;
+  name?: string;
+  date?: string;
+  status?: string;
+  filterCriteria?: {
+    days: string[];
+    endingDigits: number[];
+  };
+  scheduledFor?: string;
+}
 
-const ModalTitle = styled.h2`
-  margin-top: 0;
-  margin-bottom: 20px;
-  font-size: 1.25rem;
-`;
+export interface DrawResult {
+  drawId: string;
+  winningNumbers: string[];
+  winners: DrawParticipant[];
+  totalPrize: number;
+  completedAt: string;
+}
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
-  if (!isOpen) return null;
 
-  return (
-    <ModalOverlay isOpen={isOpen} onClick={onClose}> {/* Close on overlay click */}
-      <ModalContent onClick={(e) => e.stopPropagation()}> {/* Prevent closing when clicking inside content */}
-        <CloseButton onClick={onClose}>&times;</CloseButton>
-        {title && <ModalTitle>{title}</ModalTitle>}
-        {children}
-      </ModalContent>
-    </ModalOverlay>
-  );
-};
 
-export default Modal;
+export interface PrizeStructure {
+  id: string;
+  type: "DAILY" | "SATURDAY"; // Use type instead of draw_type
+  jackpot: number;
+  second: number;
+  third: number;
+  consolation: number;
+  consolationCount: number;
+  // Add other potential fields like rollover if managed here
+}
+
 
 
 
