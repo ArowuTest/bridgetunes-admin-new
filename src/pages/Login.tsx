@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// Updated import for v5: Replace useNavigate with useHistory
+import { useHistory } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { FaUser, FaLock, FaSpinner } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
@@ -71,13 +72,11 @@ const Input = styled.input<{ hasError?: boolean }>`
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  
+
   &:focus {
     outline: none;
     border-color: ${props => props.hasError ? props.theme.colors.danger : props.theme.colors.primary};
-    box-shadow: 0 0 0 3px ${props => props.hasError 
-      ? `${props.theme.colors.danger}33` 
-      : `${props.theme.colors.primary}33`};
+    box-shadow: 0 0 0 3px ${props => props.hasError ? `${props.theme.colors.danger}33` : `${props.theme.colors.primary}33`};
   }
 `;
 
@@ -98,13 +97,13 @@ const ErrorMessage = styled.div`
 const ForgotPassword = styled.div`
   text-align: center;
   margin-top: 1rem;
-  
+
   a {
     color: ${props => props.theme.colors.primary};
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s ease;
-    
+
     &:hover {
       color: ${props => props.theme.colors.secondary};
       text-decoration: underline;
@@ -129,14 +128,16 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, isAuthenticated } = useAuth(); // Get isAuthenticated state
   const { isDemoMode } = useDemoMode();
-  const navigate = useNavigate();
+  // Updated for v5: Replace useNavigate with useHistory
+  const history = useHistory();
 
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard", { replace: true });
+      // Updated for v5: Use history.replace to avoid adding login to history stack
+      history.replace("/dashboard");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, history]); // Add history to dependency array
 
   useEffect(() => {
     // Clear errors when inputs change
@@ -150,41 +151,37 @@ const Login: React.FC = () => {
 
   const validateForm = (): boolean => {
     const newErrors: {email?: string; password?: string} = {};
-    
     if (!email) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Email is invalid';
     }
-    
     if (!password) {
       newErrors.password = 'Password is required';
     } else if (password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) {
       return;
     }
-    
     setIsLoading(true);
     setErrors({}); // Clear previous errors
 
     try {
-      await login(email, password); // Calls AuthContext's login, which handles navigation on success
+      await login(email, password); 
+      // Calls AuthContext's login, which handles navigation on success
       // If login succeeds, AuthContext will navigate. If it fails, it throws an error.
-    } catch (error: any) { // Catch any rejection from await login()
-      console.error("Error caught in Login.tsx handleSubmit:", error); // Keep this log for now
-      setErrors({
-        general: error.message || 'An unexpected error occurred during login.'
-      });
+    } catch (error: any) {
+      // Catch any rejection from await login()
+      console.error("Error caught in Login.tsx handleSubmit:", error);
+      // Keep this log for now
+      setErrors({ general: error.message || 'An unexpected error occurred during login.' });
     } finally {
       setIsLoading(false);
     }
@@ -193,15 +190,13 @@ const Login: React.FC = () => {
   const handleDemoLogin = async () => {
     setIsLoading(true);
     setErrors({}); // Clear previous errors
-
     try {
-      await login("demo@example.com", "password"); // AuthContext handles navigation on success
-      // If login succeeds, AuthContext will navigate. If it fails, it throws an error.
+      // Using demo credentials expected by AuthContext
+      await login("admin@bridgetunes.com", "admin123"); 
+      // AuthContext handles navigation on success
     } catch (error: any) {
-      console.error("Error caught in Login.tsx handleDemoLogin:", error); // Keep log for demo
-      setErrors({
-        general: error.message || "Demo login failed"
-      });
+      console.error("Error caught in Login.tsx handleDemoLogin:", error);
+      setErrors({ general: error.message || "Demo login failed" });
     } finally {
       setIsLoading(false);
     }
@@ -216,15 +211,12 @@ const Login: React.FC = () => {
             Bridgetunes <span>Admin</span>
           </LogoText>
         </Logo>
-        
         <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Sign in to your account</h2>
-        
         {errors.general && (
           <ErrorMessage style={{ textAlign: 'center', marginBottom: '1rem' }}>
             {errors.general}
           </ErrorMessage>
         )}
-        
         <Form onSubmit={handleSubmit}>
           <FormGroup>
             <InputIcon>
@@ -239,7 +231,6 @@ const Login: React.FC = () => {
             />
             {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
           </FormGroup>
-          
           <FormGroup>
             <InputIcon>
               <FaLock />
@@ -253,27 +244,20 @@ const Login: React.FC = () => {
             />
             {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
           </FormGroup>
-          
-          <Button 
-            type="submit" 
-            fullWidth 
-            disabled={isLoading}
-          >
+          <Button type="submit" fullWidth disabled={isLoading}>
             {isLoading ? (
               <>
-                <FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> 
-                Signing in...
+                <FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> Signing in...
               </>
             ) : (
               'Sign In'
             )}
           </Button>
-          
           {isDemoMode && (
-            <Button 
-              type="button" 
-              variant="secondary" 
-              fullWidth 
+            <Button
+              type="button"
+              variant="secondary"
+              fullWidth
               onClick={handleDemoLogin}
               disabled={isLoading}
             >
@@ -281,11 +265,9 @@ const Login: React.FC = () => {
             </Button>
           )}
         </Form>
-        
         <ForgotPassword>
           <a href="#forgot-password">Forgot password?</a>
         </ForgotPassword>
-        
         {isDemoMode && (
           <DemoModeInfo>
             <strong>Demo Mode Active</strong>
@@ -298,5 +280,6 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+
 
 
