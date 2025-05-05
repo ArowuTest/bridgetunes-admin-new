@@ -1,7 +1,8 @@
-// /home/ubuntu/bridgetunes-admin-new/src/context/AuthContext.tsx
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// Updated import for v5: Replace useNavigate with useHistory
+import { useHistory } from "react-router-dom";
 import { useDemoMode } from "./DemoModeContext";
+
 // Import central types and auth service functions
 import { User, LoginCredentials, AuthResponse } from "../types/auth.types"; // Use central User type
 import { login as apiLogin, logout as apiLogout } from "../services/auth.service";
@@ -33,7 +34,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { isDemoMode } = useDemoMode();
-  const navigate = useNavigate();
+  // Updated for v5: Replace useNavigate with useHistory
+  const history = useHistory();
 
   // Check for existing auth on mount
   useEffect(() => {
@@ -57,7 +59,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             typeof savedUser.updatedAt === "string"
           ) {
             // Normalize role from localStorage to lowercase for consistency
-            const normalizedUser = { ...savedUser, role: savedUser.role.toLowerCase() };
+            const normalizedUser = {
+              ...savedUser,
+              role: savedUser.role.toLowerCase()
+            };
             setIsAuthenticated(true);
             setUser(normalizedUser as User);
           } else {
@@ -76,12 +81,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       setIsLoading(false);
     };
+
     checkAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
+
     try {
       let loginResponse: AuthResponse;
 
@@ -100,6 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             status: "active",
             lastLogin: new Date().toISOString(),
           };
+
           // Corrected: Remove 'success' property to match AuthResponse type
           loginResponse = {
             token: "demo-token-123",
@@ -127,7 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           id: backendUser.id ?? "unknown-id",
           username: backendUser.username ?? email,
           email: backendUser.email ?? email,
-          role: (backendUser.role && ["admin", "manager", "viewer"].includes(backendUser.role.toLowerCase())) 
+          role: (backendUser.role && ["admin", "manager", "viewer"].includes(backendUser.role.toLowerCase()))
             ? backendUser.role.toLowerCase() as "admin" | "manager" | "viewer" // Assert type
             : "admin", // Default role if validation fails
           name: backendUser.name ?? backendUser.username ?? "User", // Add fallback for name
@@ -142,7 +150,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(true);
         setUser(validatedUser); // Set the validated user in state
         setIsLoading(false);
-        navigate("/dashboard", { replace: true }); // Navigate after successful state update
+        
+        // Updated for v5: Replace navigate with history.push
+        history.push("/dashboard");
         return true;
       } else {
         // Throw error for invalid response structure
@@ -168,7 +178,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem(USER_KEY);
     setIsAuthenticated(false);
     setUser(null);
-    navigate("/login");
+    // Updated for v5: Replace navigate with history.push
+    history.push("/login");
   };
 
   // resetPassword function remains the same...
@@ -191,7 +202,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, user, isLoading, error, resetPassword }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        login,
+        logout,
+        user,
+        isLoading,
+        error,
+        resetPassword
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -204,7 +225,6 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
 
 
 
