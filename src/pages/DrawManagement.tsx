@@ -8,7 +8,7 @@ import "react-toastify/dist/ReactToastify.css"; // Import toast styles
 import { PageLayout } from "../components/PageLayout";
 import { Button } from "../components/Button";
 import Modal from "../components/Modal"; // Assuming Modal.tsx is placed in src/components/
-import { StatusBadge } from "../components/StatusBadge"; // Assuming a StatusBadge component exists
+import StatusBadge from "../components/StatusBadge"; // Assuming a StatusBadge component exists
 import { drawService } from "../services/draw.service"; // Import the service instance
 import { Draw, PrizeStructure, Winner } from "../types/draw.types"; // Assuming these types exist
 
@@ -641,6 +641,8 @@ const DrawManagementRefactored: React.FC = () => {
 };
 
 export default DrawManagementRefactored;
+
+
 
 
 
