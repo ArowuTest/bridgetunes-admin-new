@@ -10,7 +10,7 @@ import { Button } from "../components/Button";
 import Modal from "../components/Modal"; // Assuming Modal.tsx is placed in src/components/
 import StatusBadge from "../components/StatusBadge"; // Assuming a StatusBadge component exists
 import { drawService } from "../services/draw.service"; // Import the service instance
-import { Draw, PrizeStructure, Winner } from "../types/draw.types"; // Assuming these types exist
+import { Draw, PrizeStructure, DrawParticipant } from "../types/draw.types"; // Assuming these types exist
 
 // Helper function to get day name (e.g., "Monday")
 const getDayOfWeekName = (dayIndex: number): string => {
@@ -164,8 +164,8 @@ const DrawManagementRefactored: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [drawStage, setDrawStage] = useState<DrawStage>("idle");
     
-    const [winners, setWinners] = useState<Winner[]>([]);
-    const [jackpotWinner, setJackpotWinner] = useState<Winner | null>(null);
+    const [winners, setWinners] = useState<DrawParticipant[]>([]);
+    const [jackpotWinner, setJackpotWinner] = useState<DrawParticipant | null>(null);
 
     // State for Modals
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
@@ -302,7 +302,7 @@ const DrawManagementRefactored: React.FC = () => {
             await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate reveal delay
 
             // Assuming API returns winners array, find jackpot winner
-            const allWinners: Winner[] = result.winners || []; // Adjust based on actual API response
+            const allWinners: DrawParticipant[] = result.winners || []; // Adjust based on actual API response
             const jackpot = allWinners.find(w => w.prizeTier === "Jackpot"); // Adjust prizeTier name if needed
             
             setWinners(allWinners);
@@ -641,10 +641,6 @@ const DrawManagementRefactored: React.FC = () => {
 };
 
 export default DrawManagementRefactored;
-
-
-
-
 
 
 
