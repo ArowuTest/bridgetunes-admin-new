@@ -63,6 +63,7 @@
     ]
   },
   "devDependencies": {
+    "@types/babel__traverse": "^7.18.0",
     "@types/chart.js": "^2.9.37",
     "@types/papaparse": "^5.3.7",
     "@types/react-datepicker": "^4.11.0",
