@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridColDef } from '@material-ui/data-grid'; // Changed from @mui/x-data-grid
 
 // Define the structure of the 'draws' prop passed from Dashboard
 interface Draw {
@@ -47,68 +47,74 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
   });
 
   const columns: GridColDef[] = [
-    { 
-      field: 'id', 
-      headerName: 'ID', 
-      width: 70 
+    {
+      field: 'id',
+      headerName: 'ID',
+      width: 70
     },
-    { 
-      field: 'date', 
-      headerName: 'Date', 
-      width: 120 
+    {
+      field: 'date',
+      headerName: 'Date',
+      width: 120
     },
-    { 
-      field: 'time', 
-      headerName: 'Time', 
-      width: 100 
+    {
+      field: 'time',
+      headerName: 'Time',
+      width: 100
     },
-    { 
-      field: 'type', 
-      headerName: 'Draw Type', 
+    {
+      field: 'type',
+      headerName: 'Draw Type',
       flex: 1,
       minWidth: 150
     },
-    { 
-      field: 'winners', 
-      headerName: 'Winners', 
+    {
+      field: 'winners',
+      headerName: 'Winners',
       width: 100,
       type: 'number',
       valueFormatter: (params) => params.value.toLocaleString()
     },
-    { 
-      field: 'prize', 
-      headerName: 'Prize', 
+    {
+      field: 'prize',
+      headerName: 'Prize',
       width: 150,
       valueFormatter: (params) => params.value // Prize is already formatted string
     },
-    { 
-      field: 'status', 
-      headerName: 'Status', 
+    {
+      field: 'status',
+      headerName: 'Status',
       width: 120,
       renderCell: (params) => (
-        <div style={{ 
+        <div style={{
           padding: '4px 8px',
           borderRadius: '4px',
           fontSize: '0.75rem',
           fontWeight: 600,
           textTransform: 'uppercase',
-          backgroundColor: 
-            params.value?.toLowerCase() === 'scheduled' ? '#e9ecef' : 
-            params.value?.toLowerCase() === 'in-progress' ? '#fff3cd' : 
-            params.value?.toLowerCase() === 'completed' ? '#d1e7dd' : 
-            '#f8d7da',
-          color: 
-            params.value?.toLowerCase() === 'scheduled' ? '#495057' : 
-            params.value?.toLowerCase() === 'in-progress' ? '#856404' : 
-            params.value?.toLowerCase() === 'completed' ? '#0f5132' : 
-            '#721c24'
+          backgroundColor:
+            params.value?.toLowerCase() === 'scheduled'
+              ? '#e9ecef'
+              : params.value?.toLowerCase() === 'in-progress'
+              ? '#fff3cd'
+              : params.value?.toLowerCase() === 'completed'
+              ? '#d1e7dd'
+              : '#f8d7da',
+          color:
+            params.value?.toLowerCase() === 'scheduled'
+              ? '#495057'
+              : params.value?.toLowerCase() === 'in-progress'
+              ? '#856404'
+              : params.value?.toLowerCase() === 'completed'
+              ? '#0f5132'
+              : '#721c24'
         }}>
           {params.value}
         </div>
       )
     },
   ];
-  
+
   return (
     <TableWrapper>
       <TableTitle>{title}</TableTitle> {/* Display the title */}
@@ -130,4 +136,5 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
 // Add named export alongside default export
 export { RecentDrawsTable };
 export default RecentDrawsTable;
+
 
