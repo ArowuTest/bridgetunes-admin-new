@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+// Updated import for v5
+import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DemoModeProvider, useDemoMode } from './context/DemoModeContext';
@@ -17,7 +18,7 @@ import CSVUpload from './pages/CSVUpload';
 import WinnerManagement from './pages/WinnerManagement'; // Import the new page
 import { brandColors } from './config/appConfig';
 
-// Define theme
+// Define theme (remains the same)
 const theme = {
   colors: {
     primary: brandColors.primary,
@@ -52,7 +53,7 @@ const theme = {
   }
 };
 
-// Styled components
+// Styled components (remain the same)
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -157,56 +158,61 @@ const AppContent: React.FC = () => {
       {isAuthenticated && <Navigation />}
       
       <Content isAuthenticated={isAuthenticated}>
-        <Routes>
-          <Route path="/login" element={
+        {/* Replaced Routes with Switch */}
+        <Switch>
+          {/* Updated Route syntax for v5 */}
+          <Route path="/login">
             <AuthPageContainer>
               <Login />
             </AuthPageContainer>
-          } />
-          <Route path="/register" element={
+          </Route>
+          <Route path="/register">
             <AuthPageContainer>
               <Register />
             </AuthPageContainer>
-          } />
-          <Route path="/dashboard" element={
+          </Route>
+          <Route path="/dashboard">
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
-          } />
+          </Route>
           {/* Corrected path based on original file */}
-          <Route path="/draws" element={
+          <Route path="/draws">
             <ProtectedRoute>
               <DrawManagement />
             </ProtectedRoute>
-          } />
+          </Route>
           {/* ADDED ROUTE FOR WINNER MANAGEMENT */}
-          <Route path="/winner-management" element={
+          <Route path="/winner-management">
             <ProtectedRoute>
               <WinnerManagement />
             </ProtectedRoute>
-          } />
+          </Route>
           {/* END ADDED ROUTE */}
           {/* Corrected path based on original file */}
-          <Route path="/users" element={
+          <Route path="/users">
             <ProtectedRoute>
               <UserManagement />
             </ProtectedRoute>
-          } />
-          <Route path="/notifications" element={
+          </Route>
+          <Route path="/notifications">
             <ProtectedRoute>
               <Notifications />
             </ProtectedRoute>
-          } />
+          </Route>
           {/* Corrected path based on original file */}
-          <Route path="/csv" element={
+          <Route path="/csv">
             <ProtectedRoute>
               <CSVUpload />
             </ProtectedRoute>
-          } />
-          {/* Default route - ensure this is last */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} /> {/* Catch-all */}
-        </Routes>
+          </Route>
+          {/* Default route - Replaced Navigate with Redirect, added exact */}
+          <Route exact path="/">
+             <Redirect to="/dashboard" />
+          </Route>
+          {/* Catch-all - Replaced Route with Navigate with Redirect */}
+          <Redirect from="*" to="/dashboard" />
+        </Switch>
       </Content>
     </AppContainer>
   );
