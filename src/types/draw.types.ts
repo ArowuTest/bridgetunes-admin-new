@@ -1,57 +1,70 @@
-// Updated Draw interface based on backend model (draw.go) and frontend needs
 export interface Draw {
-  id: string; // Corresponds to _id (ObjectID) serialized as string
-  drawDate: string; // Corresponds to DrawDate (time.Time) serialized as ISO string
-  drawType: string; // DAILY or SATURDAY
-  eligibleDigits: number[]; // Corresponds to EligibleDigits ([]int)
-  useDefault: boolean; // Corresponds to UseDefault (bool)
-  status: string; // SCHEDULED, COMPLETED, FAILED, etc.
-  totalParticipants?: number; // Optional
-  optedInParticipants?: number; // Optional
-  prizes?: Prize[]; // Optional array of prizes within the draw
-  jackpotAmount?: number; // Optional
-  rolloverAmount?: number; // Added based on mock data usage
-  winners?: Winner[]; // Added based on mock data usage
-  participantsPoolA?: number; // Added based on mock data usage
-  participantsPoolB?: number; // Added based on mock data usage
-  executionLog?: string; // Added based on mock data usage
-  jackpotWinnerValidationStatus?: string; // Added based on mock data usage
-  createdAt?: string; // Optional
-  updatedAt?: string; // Optional
-  errorMessage?: string; // Optional
+  id: string;
+  name: string;
+  date: string;
+  status: string;
+  participants: number;
+  winners: number;
+  totalPrize: number;
+  filterCriteria?: {
+    days: string[];
+    endingDigits: number[];
+  };
+  winningNumbers?: string[];
+  createdAt: string;
+  updatedAt?: string;
+  scheduledFor?: string;
+  completedAt?: string;
 }
 
-// Updated Winner interface based on backend model (winner.go) and frontend needs
-export interface Winner {
-  id: string; // Corresponds to _id (ObjectID) serialized as string
+export interface DrawParticipant {
+  id: string;
+  drawId: string;
   msisdn: string;
-  maskedMsisdn?: string; // Optional
-  drawId: string; // Corresponds to DrawID (ObjectID) serialized as string
-  prizeCategory: string;
-  prizeAmount: number;
-  isOptedIn: boolean;
-  isValid: boolean;
-  status?: string; // Added optional status for demo data/future use
-  points?: number; // Optional
-  winDate: string; // Corresponds to WinDate (time.Time) serialized as ISO string
-  claimStatus?: string; // PENDING, CLAIMED, EXPIRED - Optional
-  claimDate?: string | null; // Optional ISO string or null
-  notifiedAt?: string | null; // Optional ISO string or null
-  paymentDate?: string | null; // Added optional for demo data/future use
-  paymentReference?: string | null; // Added optional for demo data/future use
-  createdAt?: string; // Optional
-  updatedAt?: string; // Optional
+  amount: number;
+  isWinner: boolean;
+  prize?: number;
+  date: string;
 }
 
-// Backend Prize structure (within Draw model)
-export interface Prize {
-  tier?: number;
-  description?: string;
-  category: string;
-  amount: number;
-  count: number; // Number of winners for this prize (now required)
-  winnerId?: string; // ObjectID serialized as string
-  isValid?: boolean;
+export interface DrawCreationRequest {
+  name: string;
+  date: string;
+  filterCriteria?: {
+    days: string[];
+    endingDigits: number[];
+  };
+  scheduledFor?: string;
+}
+
+export interface DrawUpdateRequest {
+  id: string;
+  name?: string;
+  date?: string;
+  status?: string;
+  filterCriteria?: {
+    days: string[];
+    endingDigits: number[];
+  };
+  scheduledFor?: string;
+}
+
+export interface DrawResult {
+  drawId: string;
+  winningNumbers: string[];
+  winners: DrawParticipant[];
+  totalPrize: number;
+  completedAt: string;
+}
+
+
+
+export interface PrizeStructure {
+  id: string;
+  draw_type: string; // e.g., 'DAILY', 'WEEKLY'
+  prize_name: string; // e.g., 'Jackpot', 'Consolation'
+  prize_value: number;
+  // Add other potential fields if needed based on API or usage
 }
 
 
