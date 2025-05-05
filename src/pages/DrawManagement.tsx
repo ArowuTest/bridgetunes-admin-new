@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import DatePicker from "react-datepicker"; // Import DatePicker
@@ -282,7 +279,7 @@ const DrawManagementRefactored: React.FC = () => {
         const fetchScheduledDraws = async () => {
             try {
                 // Assuming getDraws can filter by status or returns all
-                const allDraws = await drawService.getDraws({}); 
+                const allDraws = await drawService.getDraws(); 
                 setScheduledDraws(allDraws.filter((d: Draw) => d.status === "scheduled"));
             } catch (err) {
                 console.error("Failed to fetch scheduled draws:", err);
@@ -690,4 +687,6 @@ const DrawManagementRefactored: React.FC = () => {
 };
 
 export default DrawManagementRefactored;
+
+
 
