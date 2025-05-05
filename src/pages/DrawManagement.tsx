@@ -9,7 +9,7 @@ import { PageLayout } from "../components/PageLayout";
 import { Button } from "../components/Button";
 import Modal from "../components/Modal"; // Assuming Modal.tsx is placed in src/components/
 import { StatusBadge } from "../components/StatusBadge"; // Assuming a StatusBadge component exists
-import { getDraws, executeDraw, scheduleDraw, getPrizeStructure, updatePrizeStructure } from "../services/draw.service"; // Assuming these API functions exist
+import { drawService } from "../services/draw.service"; // Import the service instance
 import { Draw, PrizeStructure, Winner } from "../types/draw.types"; // Assuming these types exist
 
 // Helper function to get day name (e.g., "Monday")
@@ -140,16 +140,16 @@ const DrawManagementRefactored: React.FC = () => {
     // API function wrappers (with error handling)
     const apiGetPrizeStructure = async (type: "DAILY" | "SATURDAY"): Promise<PrizeStructure> => {
         // Simplified - add proper error handling/typing if service returns complex object
-        return getPrizeStructure({ draw_type: type }); 
+        return drawService.getPrizeStructure({ draw_type: type }); 
     };
     const apiUpdatePrizeStructure = async (id: string, data: Partial<PrizeStructure>) => {
-        return updatePrizeStructure(id, data);
+        return drawService.updatePrizeStructure(id, data);
     };
     const apiScheduleDraw = async (data: any) => { // Replace any
-        return scheduleDraw(data);
+        return drawService.scheduleDraw(data);
     };
     const apiExecuteDraw = async (drawId: string) => {
-        return executeDraw(drawId);
+        return drawService.executeDraw(drawId);
     };
 
     // State variables based on prototype and requirements
@@ -233,7 +233,7 @@ const DrawManagementRefactored: React.FC = () => {
         const fetchScheduledDraws = async () => {
             try {
                 // Assuming getDraws can filter by status or returns all
-                const allDraws = await getDraws({}); 
+                const allDraws = await drawService.getDraws({}); 
                 setScheduledDraws(allDraws.filter((d: Draw) => d.status === "scheduled"));
             } catch (err) {
                 console.error("Failed to fetch scheduled draws:", err);
@@ -310,7 +310,7 @@ const DrawManagementRefactored: React.FC = () => {
             setDrawStage("complete");
 
             // Refresh scheduled draws list after execution
-            const updatedDraws = await getDraws({}); 
+            const updatedDraws = await drawService.getDraws({}); 
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
 
         } catch (err: any) {
