@@ -410,7 +410,7 @@ const DrawManagementRefactored: React.FC = () => {
             setIsScheduleModalOpen(false);
             setScheduleFormData({ drawDate: "", drawType: "DAILY" }); // Reset form
             // Refresh scheduled draws list
-            const updatedDraws = await getDraws({}); 
+            const updatedDraws = await drawService.getDraws({}); 
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
             // alert("Draw scheduled successfully!"); // Replace with better notification
             showNotification("success", "Draw scheduled successfully!");
