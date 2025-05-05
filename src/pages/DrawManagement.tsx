@@ -1,3 +1,6 @@
+
+
+
 import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import DatePicker from "react-datepicker"; // Import DatePicker
@@ -10,7 +13,7 @@ import { Button } from "../components/Button";
 import Modal from "../components/Modal"; // Assuming Modal.tsx is placed in src/components/
 import StatusBadge from "../components/StatusBadge"; // Assuming a StatusBadge component exists
 import { drawService } from "../services/draw.service"; // Import the service instance
-import { Draw, PrizeStructure, DrawParticipant } from "../types/draw.types"; // Assuming these types exist
+import { Draw, ServicePrizeStructure, ComponentPrizeStructure, Prize, DrawParticipant, UpdatePrizeStructurePayload } from "../types/draw.types"; // Use updated types
 
 // Helper function to get day name (e.g., "Monday")
 const getDayOfWeekName = (dayIndex: number): string => {
@@ -137,25 +140,71 @@ const WinnerDisplay = styled.div`
 // --- Component --- 
 
 const DrawManagementRefactored: React.FC = () => {
-    // API function wrappers (with error handling)
-    const apiGetPrizeStructure = async (type: "DAILY" | "SATURDAY"): Promise<PrizeStructure> => {
-        // Simplified - add proper error handling/typing if service returns complex object
-        return drawService.getPrizeStructure({ draw_type: type }); 
+    // API function wrappers (with error handling and adaptation)
+    const apiGetPrizeStructure = async (type: "DAILY" | "SATURDAY"): Promise<ComponentPrizeStructure> => {
+        // 1. Call the actual service method (no arguments)
+        const serviceResponse: ServicePrizeStructure = await drawService.getPrizeStructure();
+        
+        // 2. Select the correct prize array based on the requested type
+        const prizes: Prize[] = type === "DAILY" ? serviceResponse.daily : serviceResponse.saturday;
+
+        // 3. Transform the Prize[] array into the ComponentPrizeStructure format
+        const componentStructure: ComponentPrizeStructure = {
+            // TODO: Clarify how ID is managed. Using type as a placeholder ID for now.
+            id: type, // Assuming 'DAILY' or 'SATURDAY' can act as an ID for the component state
+            type: type,
+            jackpot: prizes.find(p => p.category.toLowerCase() === "jackpot")?.amount || 0,
+            second: prizes.find(p => p.category.toLowerCase() === "second")?.amount || 0,
+            third: prizes.find(p => p.category.toLowerCase() === "third")?.amount || 0,
+            consolation: prizes.find(p => p.category.toLowerCase() === "consolation")?.amount || 0,
+            // Assuming only one consolation prize category exists for count
+            consolationCount: prizes.find(p => p.category.toLowerCase() === "consolation")?.count || 0, 
+        };
+        
+        return componentStructure;
     };
-    const apiUpdatePrizeStructure = async (id: string, data: Partial<PrizeStructure>) => {
-        return drawService.updatePrizeStructure(id, data);
+
+    // Update wrapper needs adjustment based on how the service expects the payload
+    const apiUpdatePrizeStructure = async (id: string, data: Partial<ComponentPrizeStructure>) => {
+        // The service expects { drawType: 'daily'|'saturday', prizes: Prize[] }
+        // We need to reconstruct the Prize[] array from the flat ComponentPrizeStructure
+        if (!data.type) {
+            throw new Error("Cannot update prize structure without specifying type (DAILY or SATURDAY)");
+        }
+        
+        const prizesPayload: Prize[] = [
+            { category: "Jackpot", amount: data.jackpot ?? 0, count: 1 }, // Assuming count 1 for non-consolation
+            { category: "Second", amount: data.second ?? 0, count: 1 },
+            { category: "Third", amount: data.third ?? 0, count: 1 },
+            { category: "Consolation", amount: data.consolation ?? 0, count: data.consolationCount ?? 0 },
+        ];
+
+        const payload: UpdatePrizeStructurePayload = {
+            drawType: data.type.toLowerCase() as 'daily' | 'saturday',
+            prizes: prizesPayload,
+        };
+
+        // The service update function doesn't seem to use an ID based on draw.service.ts
+        // It takes the payload directly.
+        return drawService.updatePrizeStructure(payload); 
     };
-    const apiScheduleDraw = async (data: any) => { // Replace any
+
+    const apiScheduleDraw = async (data: any) => { // Replace any with ScheduleDrawPayload from service
         return drawService.scheduleDraw(data);
     };
     const apiExecuteDraw = async (drawId: string) => {
-        return drawService.executeDraw(drawId);
+        // Service returns { message: string }, but component expects { winners: DrawParticipant[] }
+        // We need to call getDrawWinners separately after execution
+        await drawService.executeDraw(drawId); // Execute first
+        // Then fetch winners - Assuming executeDraw returns quickly or we handle async properly
+        const winners = await drawService.getDrawWinners(drawId);
+        return { winners: winners }; // Return in the format component expects
     };
 
     // State variables based on prototype and requirements
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date()); // Default to today
     const [selectedDigits, setSelectedDigits] = useState<number[]>([]);
-    const [currentPrizeStructure, setCurrentPrizeStructure] = useState<PrizeStructure | null>(null);
+    const [currentPrizeStructure, setCurrentPrizeStructure] = useState<ComponentPrizeStructure | null>(null);
     // Remove rolloverAmount state, get it from selectedDrawDetails
     // const [rolloverAmount, setRolloverAmount] = useState<number>(0);
     const [scheduledDraws, setScheduledDraws] = useState<Draw[]>([]); // Full list for finding draw ID
@@ -172,9 +221,9 @@ const DrawManagementRefactored: React.FC = () => {
     const [scheduleFormData, setScheduleFormData] = useState({ drawDate: "", drawType: "DAILY" }); // State for schedule form
     const [isEditDailyModalOpen, setIsEditDailyModalOpen] = useState(false);
     const [isEditSaturdayModalOpen, setIsEditSaturdayModalOpen] = useState(false);
-    const [prizeStructureToEdit, setPrizeStructureToEdit] = useState<PrizeStructure | null>(null);
+    const [prizeStructureToEdit, setPrizeStructureToEdit] = useState<ComponentPrizeStructure | null>(null);
     // Add state for the edit form fields to make them controlled
-    const [editFormState, setEditFormState] = useState<Partial<PrizeStructure>>({});
+    const [editFormState, setEditFormState] = useState<Partial<ComponentPrizeStructure>>({});
 
     // --- Derived State --- 
     const selectedYear = selectedDate?.getFullYear();
@@ -641,7 +690,4 @@ const DrawManagementRefactored: React.FC = () => {
 };
 
 export default DrawManagementRefactored;
-
-
-
 
