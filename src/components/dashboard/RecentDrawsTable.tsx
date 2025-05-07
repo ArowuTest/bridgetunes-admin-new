@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { DataGrid, GridColDef } from '@material-ui/data-grid'; // Changed from @mui/x-data-grid
+import { DataGrid, GridColDef, GridPageChangeParams, GridPageSizeChangeParams } from '@material-ui/data-grid'; // Changed from @mui/x-data-grid
 
 // Define the structure of the 'draws' prop passed from Dashboard
 interface Draw {
@@ -40,11 +40,8 @@ const TableContainer = styled.div`
 `;
 
 const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
-  // Use state for pagination instead of the deprecated pageSize prop
-  const [paginationModel, setPaginationModel] = useState({
-    pageSize: 5,
-    page: 0,
-  });
+  const [page, setPage] = useState(0); // MUI DataGrid page is 0-indexed
+  const [pageSize, setPageSize] = useState(5);
 
   const columns: GridColDef[] = [
     {
@@ -94,19 +91,19 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
           textTransform: 'uppercase',
           backgroundColor: (() => {
             if (typeof params.value === 'string') {
-              const status = params.value.toLowerCase();
-              if (status === 'scheduled') return '#e9ecef';
-              if (status === 'in-progress') return '#fff3cd';
-              if (status === 'completed') return '#d1e7dd';
+              const statusValue = params.value.toLowerCase();
+              if (statusValue === 'scheduled') return '#e9ecef';
+              if (statusValue === 'in-progress') return '#fff3cd';
+              if (statusValue === 'completed') return '#d1e7dd';
             }
             return '#f8d7da'; // Default for 'cancelled', non-string values, or other statuses
           })(),
           color: (() => {
             if (typeof params.value === 'string') {
-              const status = params.value.toLowerCase();
-              if (status === 'scheduled') return '#495057';
-              if (status === 'in-progress') return '#856404';
-              if (status === 'completed') return '#0f5132';
+              const statusValue = params.value.toLowerCase();
+              if (statusValue === 'scheduled') return '#495057';
+              if (statusValue === 'in-progress') return '#856404';
+              if (statusValue === 'completed') return '#0f5132';
             }
             return '#721c24'; // Default for 'cancelled', non-string values, or other statuses
           })()
@@ -124,9 +121,12 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
         <DataGrid
           rows={draws} // Use the 'draws' prop
           columns={columns}
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5]}
+          page={page}
+          onPageChange={(params: GridPageChangeParams) => setPage(params.page)}
+          pageSize={pageSize}
+          onPageSizeChange={(params: GridPageSizeChangeParams) => setPageSize(params.pageSize)}
+          rowsPerPageOptions={[5]} // This is the v4 equivalent of pageSizeOptions
+          pagination // Explicitly add pagination prop as per v4 docs examples
           disableRowSelectionOnClick
           autoHeight
         />
@@ -138,4 +138,5 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
 // Add named export alongside default export
 export { RecentDrawsTable };
 export default RecentDrawsTable;
+
 
