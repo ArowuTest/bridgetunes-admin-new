@@ -10,7 +10,7 @@ import { Button } from "../components/Button";
 import Modal from "../components/Modal"; // Assuming Modal.tsx is placed in src/components/
 import StatusBadge from "../components/StatusBadge"; // Assuming a StatusBadge component exists
 import { drawService } from "../services/draw.service"; // Import the service instance
-import { Draw, ServicePrizeStructure, ComponentPrizeStructure, Prize, DrawParticipant, UpdatePrizeStructurePayload } from "../types/draw.types"; // Use updated types
+import { Draw, ServicePrizeStructure, ComponentPrizeStructure, Prize, DrawParticipant, UpdatePrizeStructurePayload } from "../types/draw.types";
 
 // Helper function to get day name (e.g., "Monday")
 const getDayOfWeekName = (dayIndex: number): string => {
@@ -356,7 +356,7 @@ const DrawManagementRefactored: React.FC = () => {
             setDrawStage("complete");
 
             // Refresh scheduled draws list after execution
-            const updatedDraws = await drawService.getDraws();
+            const updatedDraws = await drawService.getDraws({}); 
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
 
         } catch (err) {
@@ -403,7 +403,7 @@ const DrawManagementRefactored: React.FC = () => {
         setError(null);
         try {
             // Construct the payload using the ID from the original structure and data from the form state
-            const payload: PrizeStructure = {
+            const payload: UpdatePrizeStructurePayload = {
                 ...prizeStructureToEdit, // Keep ID, type, etc.
                 jackpot: editFormState.jackpot || 0,
                 second: editFormState.second || 0,
@@ -687,4 +687,5 @@ const DrawManagementRefactored: React.FC = () => {
 };
 
 export default DrawManagementRefactored;
+
 
