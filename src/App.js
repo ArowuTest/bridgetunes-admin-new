@@ -7,7 +7,9 @@ import {
 } from 'react-router-dom';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
-import LoginPage from './pages/LoginPage';
+// ← corrected import: your login page lives in src/pages/Login.tsx
+import LoginPage from './pages/Login';
+
 import Dashboard from './pages/Dashboard';
 import DrawManagement from './pages/DrawManagement';
 import PrizeStructurePage from './pages/PrizeStructure';
@@ -43,3 +45,4 @@ function App() {
 }
 
 export default App;
+
