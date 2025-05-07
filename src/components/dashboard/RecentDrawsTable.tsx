@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { DataGrid, GridColDef, GridPageChangeParams, GridPageSizeChangeParams } from '@material-ui/data-grid'; // Changed from @mui/x-data-grid
+import { DataGrid, GridColDef } from '@material-ui/data-grid'; // Removed GridPageChangeParams, GridPageSizeChangeParams
 
 // Define the structure of the 'draws' prop passed from Dashboard
 interface Draw {
@@ -122,9 +122,9 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
           rows={draws} // Use the 'draws' prop
           columns={columns}
           page={page}
-          onPageChange={(params: GridPageChangeParams) => setPage(params.page)}
+          onPageChange={(params) => setPage(params.page)} // params is an object { page: number, pageSize: number, rowCount: number }
           pageSize={pageSize}
-          onPageSizeChange={(params: GridPageSizeChangeParams) => setPageSize(params.pageSize)}
+          onPageSizeChange={(params) => setPageSize(params.pageSize)} // params is an object { pageSize: number, page: number }
           rowsPerPageOptions={[5]} // This is the v4 equivalent of pageSizeOptions
           pagination // Explicitly add pagination prop as per v4 docs examples
           disableRowSelectionOnClick
@@ -138,5 +138,4 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
 // Add named export alongside default export
 export { RecentDrawsTable };
 export default RecentDrawsTable;
-
 
