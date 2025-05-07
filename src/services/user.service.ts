@@ -10,7 +10,7 @@ import {
 } from "../types/user.types"; // Keep these specific types
 import { User } from "../types/auth.types"; // Import User from the central location
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 // Create axios instance with base URL
 const api = axios.create({

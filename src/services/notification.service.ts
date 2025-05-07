@@ -48,7 +48,7 @@ interface Segment {
 }
 // --------------------------------------------------------------------------
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1'; // Adjusted default to match backend structure
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'; // Adjusted default to match backend structure
 
 // Create axios instance with base URL
 const api = axios.create({

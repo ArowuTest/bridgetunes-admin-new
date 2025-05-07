@@ -3,7 +3,8 @@ import { Winner } from "../types/draw.types";
 import { getAuthToken } from "./auth.service";
 
 // Define the base URL for the API
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api/v1";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
 // Re-use or adapt the fetchApi helper from draw.service.ts
 async function fetchApi(url: string, options: RequestInit = {}): Promise<any> {
