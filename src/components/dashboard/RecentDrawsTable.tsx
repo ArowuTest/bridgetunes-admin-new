@@ -92,14 +92,15 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
           fontSize: '0.75rem',
           fontWeight: 600,
           textTransform: 'uppercase',
-          backgroundColor:
-            params.value?.toLowerCase() === 'scheduled'
-              ? '#e9ecef'
-              : params.value?.toLowerCase() === 'in-progress'
-              ? '#fff3cd'
-              : params.value?.toLowerCase() === 'completed'
-              ? '#d1e7dd'
-              : '#f8d7da',
+          backgroundColor: (() => {
+  if (typeof params.value === 'string') {
+    const status = params.value.toLowerCase();
+    if (status === 'scheduled') return '#e9ecef';
+    if (status === 'in-progress') return '#fff3cd';
+    if (status === 'completed') return '#d1e7dd';
+  }
+  return '#f8d7da'; // Default for 'cancelled', non-string values, or other statuses
+})(),
           color:
             params.value?.toLowerCase() === 'scheduled'
               ? '#495057'
