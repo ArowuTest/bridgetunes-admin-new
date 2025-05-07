@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { DataGrid, GridColDef } from '@material-ui/data-grid'; // Removed GridPageChangeParams, GridPageSizeChangeParams
+import { DataGrid, GridColDef } from '@material-ui/data-grid';
 
-// Define the structure of the 'draws' prop passed from Dashboard
 interface Draw {
   id: number | string;
   date: string;
@@ -13,7 +12,6 @@ interface Draw {
   status: string;
 }
 
-// Update the props interface to include 'title' and use 'draws'
 interface DataTableProps {
   title: string;
   draws: Draw[];
@@ -35,12 +33,12 @@ const TableTitle = styled.h3`
 `;
 
 const TableContainer = styled.div`
-  height: 400px;
+  height: 400px; /* Or manage height dynamically if needed */
   width: 100%;
 `;
 
 const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
-  const [page, setPage] = useState(0); // MUI DataGrid page is 0-indexed
+  const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(5);
 
   const columns: GridColDef[] = [
@@ -116,16 +114,16 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
 
   return (
     <TableWrapper>
-      <TableTitle>{title}</TableTitle> {/* Display the title */}
+      <TableTitle>{title}</TableTitle>
       <TableContainer>
         <DataGrid
-          rows={draws} // Use the 'draws' prop
+          rows={draws}
           columns={columns}
           page={page}
-          onPageChange={(params) => setPage(params.page)} // params is an object { page: number, pageSize: number, rowCount: number }
+          onPageChange={(newPage) => setPage(newPage)} // Corrected: MUI v4 passes the new page number directly
           pageSize={pageSize}
-          onPageSizeChange={(params) => setPageSize(params.pageSize)} // params is an object { pageSize: number, page: number }
-          rowsPerPageOptions={[5]} // This is the v4 equivalent of pageSizeOptions
+          onPageSizeChange={(newPageSize) => setPageSize(newPageSize)} // Corrected: MUI v4 passes the new page size directly
+          rowsPerPageOptions={[5, 10, 20]} // This is the v4 equivalent of pageSizeOptions
           pagination // Explicitly add pagination prop as per v4 docs examples
           disableRowSelectionOnClick
           autoHeight
@@ -135,7 +133,7 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
   );
 };
 
-// Add named export alongside default export
 export { RecentDrawsTable };
 export default RecentDrawsTable;
+
 
