@@ -125,7 +125,7 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
           onPageSizeChange={(newPageSize) => setPageSize(newPageSize)} // Corrected: MUI v4 passes the new page size directly
           rowsPerPageOptions={[5, 10, 20]} // This is the v4 equivalent of pageSizeOptions
           pagination // Explicitly add pagination prop as per v4 docs examples
-          disableRowSelectionOnClick
+          disableSelectionOnClick
           autoHeight
         />
       </TableContainer>
