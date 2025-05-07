@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import DatePicker from "react-datepicker"; // Import DatePicker
-import "react-datepicker/dist/react-datepicker.css"; // Import default styles
+import "react-datepicker/dist/react-datepicker.css";
 import { FaCalendarAlt, FaTrophy, FaPlay, FaFilter } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify"; // Import toast
 import "react-toastify/dist/ReactToastify.css"; // Import toast styles
@@ -220,7 +220,13 @@ const DrawManagementRefactored: React.FC = () => {
     const [isEditSaturdayModalOpen, setIsEditSaturdayModalOpen] = useState(false);
     const [prizeStructureToEdit, setPrizeStructureToEdit] = useState<ComponentPrizeStructure | null>(null);
     // Add state for the edit form fields to make them controlled
-    const [editFormState, setEditFormState] = useState<Partial<ComponentPrizeStructure>>();
+    const [editFormState, setEditFormState] = useState<Partial<ComponentPrizeStructure>>({
+        jackpot: 0,
+        second: 0,
+        third: 0,
+        consolation: 0,
+        consolationCount: 0
+    });
 
     // --- Derived State --- 
     const selectedYear = selectedDate?.getFullYear();
@@ -256,7 +262,7 @@ const DrawManagementRefactored: React.FC = () => {
                     );
                     setSelectedDrawDetails(drawDetails || null);
 
-                } catch (err) {
+                } catch (err: any) {
                     console.error("Error fetching prize structure or draw details:", err);
                     setError(err.message || "Failed to fetch prize structure or draw details.");
                     setCurrentPrizeStructure(null);
@@ -348,7 +354,10 @@ const DrawManagementRefactored: React.FC = () => {
             await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate reveal delay
 
             // Assuming API returns winners array, find jackpot winner
-            const allWinners: DrawParticipant[] = result.winners || []; // Adjust based on actual API response
+            const allWinners: DrawParticipant[] = (result.winners || []).map(winner => ({
+                ...winner,
+                isWinner: true // Adding the required isWinner property
+            }));
             const jackpot = allWinners.find(w => w.prizeTier === "Jackpot"); // Adjust prizeTier name if needed
             
             setWinners(allWinners);
@@ -359,7 +368,7 @@ const DrawManagementRefactored: React.FC = () => {
             const updatedDraws = await drawService.getDraws(); 
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
 
-        } catch (err) {
+        } catch (err:any) {
             console.error("Error executing draw:", err);
             const apiError = err.response?.data?.message || err.message || "Failed to execute draw.";
             setError(`Failed to execute draw ${drawToExecute.id}: ${apiError} (Status: ${err.response?.status || "N/A"})`);
@@ -389,7 +398,7 @@ const DrawManagementRefactored: React.FC = () => {
             } else {
                 setIsEditSaturdayModalOpen(true);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error(`Error fetching ${type} prize structure for edit:`, err);
             setError(err.message || `Failed to fetch ${type} prize structure.`);
         } finally {
@@ -403,7 +412,7 @@ const DrawManagementRefactored: React.FC = () => {
         setError(null);
         try {
             // Construct the payload using the ID from the original structure and data from the form state
-            const payload: UpdatePrizeStructurePayload = {
+            const payload: ComponentPrizeStructure = {
                 ...prizeStructureToEdit, // Keep ID, type, etc.
                 jackpot: editFormState.jackpot || 0,
                 second: editFormState.second || 0,
@@ -416,7 +425,13 @@ const DrawManagementRefactored: React.FC = () => {
             setIsEditDailyModalOpen(false);
             setIsEditSaturdayModalOpen(false);
             setPrizeStructureToEdit(null);
-            setEditFormState(); // Clear form state
+            setEditFormState({
+                jackpot: 0,
+                second: 0,
+                third: 0,
+                consolation: 0,
+                consolationCount: 0
+            }); // Clear form state
             // Re-fetch current structure if it was the one edited
             if (selectedDate) {
                 const dayIndex = selectedDate.getDay();
@@ -429,7 +444,7 @@ const DrawManagementRefactored: React.FC = () => {
             }
             // alert("Prize structure updated successfully!"); // Replace with better notification
             showNotification("success", "Prize structure updated successfully!");
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error updating prize structure:", err);
             const apiError = err.message || "Failed to update prize structure.";
             setError(apiError);
@@ -460,7 +475,7 @@ const DrawManagementRefactored: React.FC = () => {
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
             // alert("Draw scheduled successfully!"); // Replace with better notification
             showNotification("success", "Draw scheduled successfully!");
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error scheduling draw:", err);
              // Check if the error response has more details
             const apiError = err.response?.data?.message || err.message || "Failed to schedule draw.";

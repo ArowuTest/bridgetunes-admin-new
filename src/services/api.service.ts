@@ -4,7 +4,7 @@ import { LoginCredentials, RegisterData, AuthResponse } from '../types/auth.type
 // Define the key used to store the auth token in localStorage
 const AUTH_TOKEN_KEY = 'authToken';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1'; // Use the same base URL as auth.service.ts
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'; // Use the same base URL as auth.service.ts
 
 // Create axios instance with base URL
 const api = axios.create({

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { DataGrid, GridColDef } from '@material-ui/data-grid';
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
 interface Draw {
   id: number | string;
@@ -43,72 +43,73 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
 
   const columns: GridColDef[] = [
     {
-      field: 'id',
-      headerName: 'ID',
-      width: 70
+      field: "id",
+      headerName: "ID",
+      width: 70,
     },
     {
-      field: 'date',
-      headerName: 'Date',
-      width: 120
-    },
-    {
-      field: 'time',
-      headerName: 'Time',
-      width: 100
-    },
-    {
-      field: 'type',
-      headerName: 'Draw Type',
-      flex: 1,
-      minWidth: 150
-    },
-    {
-      field: 'winners',
-      headerName: 'Winners',
-      width: 100,
-      type: 'number',
-      valueFormatter: (params) => params.value?.toLocaleString() ?? ''
-    },
-    {
-      field: 'prize',
-      headerName: 'Prize',
-      width: 150,
-      valueFormatter: (params) => params.value // Prize is already formatted string
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
+      field: "date",
+      headerName: "Date",
       width: 120,
-      renderCell: (params) => (
-        <div style={{
-          padding: '4px 8px',
-          borderRadius: '4px',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          backgroundColor: (() => {
-            if (typeof params.value === 'string') {
-              const statusValue = params.value.toLowerCase();
-              if (statusValue === 'scheduled') return '#e9ecef';
-              if (statusValue === 'in-progress') return '#fff3cd';
-              if (statusValue === 'completed') return '#d1e7dd';
-            }
-            return '#f8d7da'; // Default for 'cancelled', non-string values, or other statuses
-          })(),
-          color: (() => {
-            if (typeof params.value === 'string') {
-              const statusValue = params.value.toLowerCase();
-              if (statusValue === 'scheduled') return '#495057';
-              if (statusValue === 'in-progress') return '#856404';
-              if (statusValue === 'completed') return '#0f5132';
-            }
-            return '#721c24'; // Default for 'cancelled', non-string values, or other statuses
-          })()
-        }}>
+    },
+    {
+      field: "time",
+      headerName: "Time",
+      width: 100,
+    },
+    {
+      field: "type",
+      headerName: "Draw Type",
+      flex: 1,
+      minWidth: 150,
+    },
+    {
+      field: "winners",
+      headerName: "Winners",
+      width: 100,
+      type: "number",
+      valueFormatter: (params: { value: number }) =>
+        params.value.toLocaleString(),
+    },
+    {
+      field: "prize",
+      headerName: "Prize",
+      width: 150,
+      valueFormatter: (params: { value: string }) => params.value, // Prize is already formatted string
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 120,
+      renderCell: (params: any) => (
+        <div
+          style={{
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            textTransform: "uppercase",
+            backgroundColor:
+              params.value?.toLowerCase() === "scheduled"
+                ? "#e9ecef"
+                : params.value?.toLowerCase() === "in-progress"
+                ? "#fff3cd"
+                : params.value?.toLowerCase() === "completed"
+                ? "#d1e7dd"
+                : "#f8d7da",
+            color:
+              params.value?.toLowerCase() === "scheduled"
+                ? "#495057"
+                : params.value?.toLowerCase() === "in-progress"
+                ? "#856404"
+                : params.value?.toLowerCase() === "completed"
+                ? "#0f5132"
+                : "#721c24",
+          }}
+        >
           {params.value}
         </div>
-      )
+      ),
     },
   ];
 
@@ -119,13 +120,17 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
         <DataGrid
           rows={draws}
           columns={columns}
-          page={page}
-          onPageChange={(newPage) => setPage(newPage)} // Corrected: MUI v4 passes the new page number directly
-          pageSize={pageSize}
-          onPageSizeChange={(newPageSize) => setPageSize(newPageSize)} // Corrected: MUI v4 passes the new page size directly
-          rowsPerPageOptions={[5, 10, 20]} // This is the v4 equivalent of pageSizeOptions
-          pagination // Explicitly add pagination prop as per v4 docs examples
-          disableSelectionOnClick
+          paginationModel={{
+            page,
+            pageSize,
+          }}
+          onPaginationModelChange={(model) => {
+            setPage(model.page);
+            setPageSize(model.pageSize);
+          }}
+          pageSizeOptions={[5, 10, 20]}
+          pagination
+          disableRowSelectionOnClick
           autoHeight
         />
       </TableContainer>

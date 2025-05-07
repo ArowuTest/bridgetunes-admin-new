@@ -2,7 +2,8 @@
 import { LoginCredentials, AuthResponse } from "../types/auth.types"; // Import central types
 
 // Define the base URL for the API (consistent with other services)
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api/v1";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 const AUTH_TOKEN_KEY = "authToken"; // Key for storing token in localStorage
 
 /**

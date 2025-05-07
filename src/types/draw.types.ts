@@ -1,7 +1,7 @@
 export interface Draw {
   id: string;
-  name: string;
-  date: string; // Consider using Date type if appropriate, but string is often safer for API consistency
+  name?: string;
+  date?: string; // Consider using Date type if appropriate, but string is often safer for API consistency
   status: string; // e.g., 'scheduled', 'completed', 'cancelled'
   participants?: number; // Optional based on API response
   winners?: number; // Optional
@@ -17,8 +17,29 @@ export interface Draw {
   completedAt?: string;
   // Added based on component usage
   drawDate: string; // Seems redundant with 'date', clarify which one is correct from API
+  drawType: string;
+  eligibleDigits: number[];
+  useDefault: false;
+  totalParticipants?: number;
   rollover?: number; // Optional, used in PrizeDisplay
   type?: "DAILY" | "SATURDAY"; // Optional, used in PrizeDisplay
+}
+
+export interface Winner {
+  id: string;
+  drawId: string;
+  msisdn: string;
+  prizeAmount: number;
+  prizeCategory: string;
+  isOptedIn: boolean;
+  isValid: boolean;
+  winDate: string;
+  status?: string;
+  paymentDate: string | null;
+  paymentReference: string | null;
+  createdAt: string;
+  updatedAt: string;
+  claimStatus?: string;
 }
 
 export interface DrawParticipant {
