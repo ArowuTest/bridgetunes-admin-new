@@ -34,16 +34,8 @@
     "extends": ["react-app", "react-app/jest"]
   },
   "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "production": [">0.2%", "not dead", "not op_mini all"],
+    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
   },
   "devDependencies": {
     "@types/babel__traverse": "7.17.1",
@@ -55,9 +47,9 @@
     "@types/react-router": "5.1.14",
     "@types/react-router-dom": "^5.3.3",
     "@types/styled-components": "^5.1.26",
+    "babel-eslint": "^10.1.0",
     "eslint-config-react-app": "^6.0.0",
     "typescript": "3.9.10"
   }
 }
-
 
