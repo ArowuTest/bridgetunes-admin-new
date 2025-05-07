@@ -93,22 +93,23 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
           fontWeight: 600,
           textTransform: 'uppercase',
           backgroundColor: (() => {
-  if (typeof params.value === 'string') {
-    const status = params.value.toLowerCase();
-    if (status === 'scheduled') return '#e9ecef';
-    if (status === 'in-progress') return '#fff3cd';
-    if (status === 'completed') return '#d1e7dd';
-  }
-  return '#f8d7da'; // Default for 'cancelled', non-string values, or other statuses
-})(),
-          color:
-            params.value?.toLowerCase() === 'scheduled'
-              ? '#495057'
-              : params.value?.toLowerCase() === 'in-progress'
-              ? '#856404'
-              : params.value?.toLowerCase() === 'completed'
-              ? '#0f5132'
-              : '#721c24'
+            if (typeof params.value === 'string') {
+              const status = params.value.toLowerCase();
+              if (status === 'scheduled') return '#e9ecef';
+              if (status === 'in-progress') return '#fff3cd';
+              if (status === 'completed') return '#d1e7dd';
+            }
+            return '#f8d7da'; // Default for 'cancelled', non-string values, or other statuses
+          })(),
+          color: (() => {
+            if (typeof params.value === 'string') {
+              const status = params.value.toLowerCase();
+              if (status === 'scheduled') return '#495057';
+              if (status === 'in-progress') return '#856404';
+              if (status === 'completed') return '#0f5132';
+            }
+            return '#721c24'; // Default for 'cancelled', non-string values, or other statuses
+          })()
         }}>
           {params.value}
         </div>
@@ -137,5 +138,4 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
 // Add named export alongside default export
 export { RecentDrawsTable };
 export default RecentDrawsTable;
-
 
