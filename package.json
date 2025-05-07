@@ -36,6 +36,24 @@
     "production": [">0.2%", "not dead", "not op_mini all"],
     "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
   },
+  "dependencies": {
+    "@mui/material": "^5.12.0",
+    "@mui/x-data-grid": "^5.17.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+
+    // pin to v5 because your admin code uses useHistory/Switch/Redirect
+    "react-router-dom": "^5.3.4",
+
+    // newly required libraries
+    "react-icons": "^4.10.1",
+    "react-datepicker": "^4.8.0",
+    "react-toastify": "^9.1.1",
+    "react-quill": "^2.0.0",
+
+    // your existing styling / utility deps
+    "styled-components": "^5.3.5"
+  },
   "devDependencies": {
     "@types/babel__traverse": "7.17.1",
     "@types/jest": "^24.0.0",
