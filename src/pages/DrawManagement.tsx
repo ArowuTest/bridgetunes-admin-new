@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import DatePicker from "react-datepicker"; // Import DatePicker
-import "react-datepicker/dist/react-datepicker.css"; // Import default styles
+import "react-datepicker/dist/react-datepicker.css";
 import { FaCalendarAlt, FaTrophy, FaPlay, FaFilter } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify"; // Import toast
 import "react-toastify/dist/ReactToastify.css"; // Import toast styles
@@ -348,7 +348,10 @@ const DrawManagementRefactored: React.FC = () => {
             await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate reveal delay
 
             // Assuming API returns winners array, find jackpot winner
-            const allWinners: DrawParticipant[] = result.winners || []; // Adjust based on actual API response
+            const allWinners: DrawParticipant[] = (result.winners || []).map(winner => ({
+                ...winner,
+                isWinner: true // Adding the required isWinner property
+            }));
             const jackpot = allWinners.find(w => w.prizeTier === "Jackpot"); // Adjust prizeTier name if needed
             
             setWinners(allWinners);
@@ -356,7 +359,7 @@ const DrawManagementRefactored: React.FC = () => {
             setDrawStage("complete");
 
             // Refresh scheduled draws list after execution
-            const updatedDraws = await drawService.getDraws({}); 
+            const updatedDraws = await drawService.getDraws(); 
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
 
         } catch (err: any) {
@@ -403,7 +406,7 @@ const DrawManagementRefactored: React.FC = () => {
         setError(null);
         try {
             // Construct the payload using the ID from the original structure and data from the form state
-            const payload: PrizeStructure = {
+            const payload: ComponentPrizeStructure = {
                 ...prizeStructureToEdit, // Keep ID, type, etc.
                 jackpot: editFormState.jackpot || 0,
                 second: editFormState.second || 0,
@@ -456,7 +459,7 @@ const DrawManagementRefactored: React.FC = () => {
             setIsScheduleModalOpen(false);
             setScheduleFormData({ drawDate: "", drawType: "DAILY" }); // Reset form
             // Refresh scheduled draws list
-            const updatedDraws = await drawService.getDraws({}); 
+            const updatedDraws = await drawService.getDraws(); 
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
             // alert("Draw scheduled successfully!"); // Replace with better notification
             showNotification("success", "Draw scheduled successfully!");

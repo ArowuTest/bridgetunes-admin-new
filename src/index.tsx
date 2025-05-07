@@ -1,18 +1,19 @@
 import React from 'react';
-import ReactDOM from 'react-dom'; // React 17 import
-import './index.css';
+import ReactDOM from 'react-dom/client'; 
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import "./index.css";
+
 
 // Add Node.js polyfills for crypto module compatibility
 window.process = window.process || {};
 window.process.env = window.process.env || {};
 
-ReactDOM.render( // React 17 API
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+root.render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+  </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

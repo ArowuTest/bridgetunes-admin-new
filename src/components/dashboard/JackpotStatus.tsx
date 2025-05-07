@@ -118,9 +118,9 @@ const JackpotStatus: React.FC = () => {
       // Sort history by date descending
       historyData.sort((a, b) => new Date(b.drawDate).getTime() - new Date(a.drawDate).getTime());
       setHistory(historyData);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching jackpot data:", err);
-      setError(`Failed to load jackpot data: ${err.message}`);
+      setError(`Failed to load jackpot data: ${err?.message}`);
       // Use mock data on error as fallback
       setStatus(MOCK_JACKPOT_STATUS);
       setHistory(MOCK_ROLLOVER_HISTORY);

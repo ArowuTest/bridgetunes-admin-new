@@ -1,22 +1,26 @@
-import React from 'react';
-import styled from 'styled-components';
-// Updated import for v5
-import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
-import { ThemeProvider } from 'styled-components';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { DemoModeProvider, useDemoMode } from './context/DemoModeContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import DemoModeToggle from './components/DemoModeToggle';
-import Navigation from './components/Navigation';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import DrawManagement from './pages/DrawManagement';
-import UserManagement from './pages/UserManagement';
-import Notifications from './pages/Notifications';
-import CSVUpload from './pages/CSVUpload';
-import WinnerManagement from './pages/WinnerManagement'; // Import the new page
-import { brandColors } from './config/appConfig';
+import React from "react";
+import styled from "styled-components";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { ThemeProvider } from "styled-components";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { DemoModeProvider, useDemoMode } from "./context/DemoModeContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import DemoModeToggle from "./components/DemoModeToggle";
+import Navigation from "./components/Navigation";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import DrawManagement from "./pages/DrawManagement";
+import UserManagement from "./pages/UserManagement";
+import Notifications from "./pages/Notifications";
+import CSVUpload from "./pages/CSVUpload";
+import WinnerManagement from "./pages/WinnerManagement";
+import { brandColors } from "./config/appConfig";
 
 // Define theme (remains the same)
 const theme = {
@@ -33,27 +37,27 @@ const theme = {
     gray: brandColors.gray,
     mtnYellow: brandColors.primary,
     bridgetunesBlue: brandColors.secondary,
-    bridgetunesDark: brandColors.dark
+    bridgetunesDark: brandColors.dark,
   },
   fonts: {
     body: "'Roboto', sans-serif",
-    heading: "'Roboto', sans-serif"
+    heading: "'Roboto', sans-serif",
   },
   fontWeights: {
     normal: 400,
     medium: 500,
     semibold: 600,
-    bold: 700
+    bold: 700,
   },
   breakpoints: {
-    sm: '576px',
-    md: '768px',
-    lg: '992px',
-    xl: '1200px'
-  }
+    sm: "576px",
+    md: "768px",
+    lg: "992px",
+    xl: "1200px",
+  },
 };
 
-// Styled components (remain the same)
+// Styled components
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -79,18 +83,18 @@ const Header = styled.header`
 const Logo = styled.div`
   font-size: 1.5rem;
   font-weight: 700;
-  color: ${props => props.theme.colors.dark};
+  color: ${(props) => props.theme.colors.dark};
   display: flex;
   align-items: center;
   span {
-    color: ${props => props.theme.colors.primary};
+    color: ${(props) => props.theme.colors.primary};
   }
 `;
 
 const MTNLogo = styled.div`
   width: 40px;
   height: 40px;
-  background-color: ${props => props.theme.colors.primary};
+  background-color: ${(props) => props.theme.colors.primary};
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -103,18 +107,18 @@ const MTNLogo = styled.div`
 const Content = styled.main<{ isAuthenticated: boolean }>`
   flex: 1;
   margin-top: 70px; /* Space for header */
-  margin-left: ${props => props.isAuthenticated ? '250px' : '0'};
+  margin-left: ${(props) => (props.isAuthenticated ? "250px" : "0")};
   transition: margin-left 0.3s ease;
   padding: 2rem;
-  
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
+
+  @media (max-width: ${(props) => props.theme.breakpoints.md}) {
     margin-left: 0;
     padding: 1rem;
   }
 `;
 
 const DemoModeBanner = styled.div`
-  background-color: ${props => props.theme.colors.primary};
+  background-color: ${(props) => props.theme.colors.primary};
   color: black;
   padding: 0.5rem 2rem;
   text-align: center;
@@ -134,11 +138,11 @@ const AuthPageContainer = styled.div`
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 `;
 
-// Separate component to use hooks at the top level
+// AppContent component to host header, demo banner, navigation, and routes
 const AppContent: React.FC = () => {
   const { isDemoMode } = useDemoMode();
   const { isAuthenticated } = useAuth();
-  
+
   return (
     <AppContainer>
       <Header>
@@ -148,71 +152,84 @@ const AppContent: React.FC = () => {
         </Logo>
         <DemoModeToggle />
       </Header>
-      
+
       {isDemoMode && (
         <DemoModeBanner>
           Demo Mode Active - Data is stored locally and not sent to any server
         </DemoModeBanner>
       )}
-      
+
       {isAuthenticated && <Navigation />}
-      
+
       <Content isAuthenticated={isAuthenticated}>
-        {/* Replaced Routes with Switch */}
-        <Switch>
-          {/* Updated Route syntax for v5 */}
-          <Route path="/login">
-            <AuthPageContainer>
-              <Login />
-            </AuthPageContainer>
-          </Route>
-          <Route path="/register">
-            <AuthPageContainer>
-              <Register />
-            </AuthPageContainer>
-          </Route>
-          <Route path="/dashboard">
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          </Route>
-          {/* Corrected path based on original file */}
-          <Route path="/draws">
-            <ProtectedRoute>
-              <DrawManagement />
-            </ProtectedRoute>
-          </Route>
-          {/* ADDED ROUTE FOR WINNER MANAGEMENT */}
-          <Route path="/winner-management">
-            <ProtectedRoute>
-              <WinnerManagement />
-            </ProtectedRoute>
-          </Route>
-          {/* END ADDED ROUTE */}
-          {/* Corrected path based on original file */}
-          <Route path="/users">
-            <ProtectedRoute>
-              <UserManagement />
-            </ProtectedRoute>
-          </Route>
-          <Route path="/notifications">
-            <ProtectedRoute>
-              <Notifications />
-            </ProtectedRoute>
-          </Route>
-          {/* Corrected path based on original file */}
-          <Route path="/csv">
-            <ProtectedRoute>
-              <CSVUpload />
-            </ProtectedRoute>
-          </Route>
-          {/* Default route - Replaced Navigate with Redirect, added exact */}
-          <Route exact path="/">
-             <Redirect to="/dashboard" />
-          </Route>
-          {/* Catch-all - Replaced Route with Navigate with Redirect */}
-          <Redirect from="*" to="/dashboard" />
-        </Switch>
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <AuthPageContainer>
+                <Login />
+              </AuthPageContainer>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <AuthPageContainer>
+                <Register />
+              </AuthPageContainer>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/draws"
+            element={
+              <ProtectedRoute>
+                <DrawManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/winner-management"
+            element={
+              <ProtectedRoute>
+                <WinnerManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute>
+                <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <Notifications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/csv"
+            element={
+              <ProtectedRoute>
+                <CSVUpload />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
       </Content>
     </AppContainer>
   );
@@ -233,5 +250,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
-

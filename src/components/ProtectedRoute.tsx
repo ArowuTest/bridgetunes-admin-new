@@ -1,6 +1,5 @@
 import React, { ReactNode } from 'react';
-// Updated import for v5: Replace Navigate with Redirect
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import styled from 'styled-components'; // Import styled-components
 
@@ -28,10 +27,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // If loading is finished and user is not authenticated, redirect to login
   if (!isAuthenticated) {
-    // Replaced Navigate with Redirect for v5
-    return <Redirect to="/login" />;
+    return <Navigate to="/login" replace />;
   }
-
   // If loading is finished and user is authenticated, render the protected content
   return <>{children}</>;
 };

@@ -11,10 +11,10 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 // --- Mock Data (For Demo Mode) ---
 const MOCK_WINNERS: Winner[] = [
-  { id: 'win1', msisdn: '2348031234567', prizeCategory: 'jackpot', prizeAmount: 1000000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Pending', createdAt: new Date().toISOString(), isOptedIn: true, isValid: true },
-  { id: 'win2', msisdn: '2348037654321', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Paid', createdAt: new Date().toISOString(), isOptedIn: true, isValid: true },
-  { id: 'win3', msisdn: '2349098765432', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Pending', createdAt: new Date().toISOString(), isOptedIn: true, isValid: true },
-  { id: 'win4', msisdn: '2347061112222', prizeCategory: 'jackpot', prizeAmount: 5000000, drawId: 'draw3', winDate: new Date('2024-05-04T10:00:00Z').toISOString(), claimStatus: 'Failed', createdAt: new Date().toISOString(), isOptedIn: true, isValid: true }, // Example Saturday winner
+  { id: 'win1', msisdn: '2348031234567', prizeCategory: 'jackpot', prizeAmount: 1000000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), paymentDate: null, paymentReference: null, isOptedIn: true, isValid: true },
+  { id: 'win2', msisdn: '2348037654321', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Paid', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), paymentDate: new Date().toISOString(), paymentReference: 'REF123', isOptedIn: true, isValid: true },
+  { id: 'win3', msisdn: '2349098765432', prizeCategory: 'consolation', prizeAmount: 5000, drawId: 'draw1', winDate: new Date('2024-05-01T10:00:00Z').toISOString(), claimStatus: 'Pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), paymentDate: null, paymentReference: null, isOptedIn: true, isValid: true },
+  { id: 'win4', msisdn: '2347061112222', prizeCategory: 'jackpot', prizeAmount: 5000000, drawId: 'draw3', winDate: new Date('2024-05-04T10:00:00Z').toISOString(), claimStatus: 'Failed', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), paymentDate: null, paymentReference: null, isOptedIn: true, isValid: true }, // Example Saturday winner
 ];
 
 // --- Styled Components (reuse or adapt from DrawManagement) ---

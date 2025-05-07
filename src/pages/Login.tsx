@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// Updated import for v5: Replace useNavigate with useHistory
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { FaUser, FaLock, FaSpinner } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
@@ -129,15 +128,15 @@ const Login: React.FC = () => {
   const { login, isAuthenticated } = useAuth(); // Get isAuthenticated state
   const { isDemoMode } = useDemoMode();
   // Updated for v5: Replace useNavigate with useHistory
-  const history = useHistory();
+  const navigate = useNavigate();
 
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated) {
-      // Updated for v5: Use history.replace to avoid adding login to history stack
-      history.replace("/dashboard");
+      // Use navigate to avoid adding login to history stack
+      navigate("/dashboard", { replace: true });
     }
-  }, [isAuthenticated, history]); // Add history to dependency array
+  }, [isAuthenticated, navigate]); // Add navigate to dependency array
 
   useEffect(() => {
     // Clear errors when inputs change

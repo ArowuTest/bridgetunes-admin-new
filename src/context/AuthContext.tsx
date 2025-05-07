@@ -1,18 +1,26 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-// Updated import for v5: Replace useNavigate with useHistory
-import { useHistory } from "react-router-dom";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
+import { useNavigate } from "react-router-dom";
 import { useDemoMode } from "./DemoModeContext";
 
 // Import central types and auth service functions
-import { User, LoginCredentials, AuthResponse } from "../types/auth.types"; // Use central User type
-import { login as apiLogin, logout as apiLogout } from "../services/auth.service";
+import { User, LoginCredentials, AuthResponse } from "../types/auth.types";
+import {
+  login as apiLogin,
+  logout as apiLogout,
+} from "../services/auth.service";
 
 // Define the shape of the context value
 interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  user: User | null; // Use the imported User type
+  user: User | null;
   isLoading: boolean;
   error: string | null;
   resetPassword: (email: string) => Promise<boolean>;
@@ -34,8 +42,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { isDemoMode } = useDemoMode();
-  // Updated for v5: Replace useNavigate with useHistory
-  const history = useHistory();
+  const navigate = useNavigate();
 
   // Check for existing auth on mount
   useEffect(() => {
@@ -53,23 +60,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             typeof savedUser.id === "string" &&
             typeof savedUser.username === "string" &&
             typeof savedUser.email === "string" &&
-            typeof savedUser.role === "string" && // Role exists
-            typeof savedUser.name === "string" && // Check for name
+            typeof savedUser.role === "string" &&
+            typeof savedUser.name === "string" &&
             typeof savedUser.createdAt === "string" &&
             typeof savedUser.updatedAt === "string"
           ) {
             // Normalize role from localStorage to lowercase for consistency
             const normalizedUser = {
               ...savedUser,
-              role: savedUser.role.toLowerCase()
+              role: savedUser.role.toLowerCase(),
             };
             setIsAuthenticated(true);
             setUser(normalizedUser as User);
           } else {
-            throw new Error("Saved user data does not match expected User structure.");
+            throw new Error(
+              "Saved user data does not match expected User structure."
+            );
           }
         } catch (e) {
-          console.error("Failed to parse or validate user data from localStorage", e);
+          console.error(
+            "Failed to parse or validate user data from localStorage",
+            e
+          );
           localStorage.removeItem(AUTH_TOKEN_KEY);
           localStorage.removeItem(USER_KEY);
           setIsAuthenticated(false);
@@ -100,66 +112,67 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             username: "admin",
             email: "admin@bridgetunes.com",
             role: "admin" as const,
-            name: "Demo Admin", // Include name for demo user
+            name: "Demo Admin",
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            // Add optional fields if needed for demo, otherwise they can be omitted or undefined
             status: "active",
             lastLogin: new Date().toISOString(),
           };
 
-          // Corrected: Remove 'success' property to match AuthResponse type
           loginResponse = {
             token: "demo-token-123",
-            user: demoUser, // Note: Backend might return Partial<User>, handled below
+            user: demoUser,
           };
           localStorage.setItem(AUTH_TOKEN_KEY, loginResponse.token);
         } else {
-          // Throw error for invalid demo credentials
-          const demoErrorMsg = "Invalid credentials. In demo mode, use admin@bridgetunes.com / admin123";
+          const demoErrorMsg =
+            "Invalid credentials. In demo mode, use admin@bridgetunes.com / admin123";
           setError(demoErrorMsg);
           setIsLoading(false);
-          throw new Error(demoErrorMsg); // Reject promise
+          throw new Error(demoErrorMsg);
         }
       } else {
         // Call the actual API login function
         loginResponse = await apiLogin({ email, password });
       }
 
-      // Process the response (token is already saved by apiLogin for non-demo)
       if (loginResponse.token && loginResponse.user) {
-        const backendUser = loginResponse.user; // This is potentially Partial<User>
-
-        // Construct the full User object for the context state, providing defaults
+        const backendUser = loginResponse.user;
         const validatedUser: User = {
           id: backendUser.id ?? "unknown-id",
           username: backendUser.username ?? email,
           email: backendUser.email ?? email,
-          role: (backendUser.role && ["admin", "manager", "viewer"].includes(backendUser.role.toLowerCase()))
-            ? backendUser.role.toLowerCase() as "admin" | "manager" | "viewer" // Assert type
-            : "admin", // Default role if validation fails
-          name: backendUser.name ?? backendUser.username ?? "User", // Add fallback for name
+          role:
+            backendUser.role &&
+            ["admin", "manager", "viewer"].includes(
+              backendUser.role.toLowerCase()
+            )
+              ? (backendUser.role.toLowerCase() as
+                  | "admin"
+                  | "manager"
+                  | "viewer")
+              : "admin",
+          name: backendUser.name ?? backendUser.username ?? "User",
           createdAt: backendUser.createdAt ?? new Date().toISOString(),
           updatedAt: backendUser.updatedAt ?? new Date().toISOString(),
-          // Handle optional fields safely
           status: backendUser.status,
           lastLogin: backendUser.lastLogin,
         };
 
-        localStorage.setItem(USER_KEY, JSON.stringify(validatedUser)); // Save the validated user
+        localStorage.setItem(USER_KEY, JSON.stringify(validatedUser));
         setIsAuthenticated(true);
-        setUser(validatedUser); // Set the validated user in state
+        setUser(validatedUser);
         setIsLoading(false);
-        
-        // Updated for v5: Replace navigate with history.push
-        history.push("/dashboard");
+
+        // Navigate to dashboard using useNavigate hook from React Router v6
+        navigate("/dashboard");
         return true;
       } else {
-        // Throw error for invalid response structure
-        const invalidResponseMsg = "Login failed: Invalid response structure from server.";
+        const invalidResponseMsg =
+          "Login failed: Invalid response structure from server.";
         setError(invalidResponseMsg);
         setIsLoading(false);
-        throw new Error(invalidResponseMsg); // Reject promise
+        throw new Error(invalidResponseMsg);
       }
     } catch (err: any) {
       console.error("Login error in AuthContext:", err);
@@ -178,16 +191,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem(USER_KEY);
     setIsAuthenticated(false);
     setUser(null);
-    // Updated for v5: Replace navigate with history.push
-    history.push("/login");
+    // Navigate to login page using useNavigate hook from React Router v6
+    navigate("/login");
   };
 
-  // resetPassword function remains the same...
   const resetPassword = async (email: string): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
     try {
-      // Replace with actual API call if needed
       return new Promise((resolve) => {
         setTimeout(() => {
           setIsLoading(false);
@@ -210,7 +221,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         user,
         isLoading,
         error,
-        resetPassword
+        resetPassword,
       }}
     >
       {children}
@@ -225,6 +236,3 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
-
-
