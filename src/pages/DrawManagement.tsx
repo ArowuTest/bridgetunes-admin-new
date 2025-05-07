@@ -220,7 +220,7 @@ const DrawManagementRefactored: React.FC = () => {
     const [isEditSaturdayModalOpen, setIsEditSaturdayModalOpen] = useState(false);
     const [prizeStructureToEdit, setPrizeStructureToEdit] = useState<ComponentPrizeStructure | null>(null);
     // Add state for the edit form fields to make them controlled
-    const [editFormState, setEditFormState] = useState<Partial<ComponentPrizeStructure>>({});
+    const [editFormState, setEditFormState] = useState<Partial<ComponentPrizeStructure>>();
 
     // --- Derived State --- 
     const selectedYear = selectedDate?.getFullYear();
@@ -356,7 +356,7 @@ const DrawManagementRefactored: React.FC = () => {
             setDrawStage("complete");
 
             // Refresh scheduled draws list after execution
-            const updatedDraws = await drawService.getDraws({}); 
+            const updatedDraws = await drawService.getDraws(); 
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
 
         } catch (err) {
@@ -416,7 +416,7 @@ const DrawManagementRefactored: React.FC = () => {
             setIsEditDailyModalOpen(false);
             setIsEditSaturdayModalOpen(false);
             setPrizeStructureToEdit(null);
-            setEditFormState({}); // Clear form state
+            setEditFormState(); // Clear form state
             // Re-fetch current structure if it was the one edited
             if (selectedDate) {
                 const dayIndex = selectedDate.getDay();
@@ -456,7 +456,7 @@ const DrawManagementRefactored: React.FC = () => {
             setIsScheduleModalOpen(false);
             setScheduleFormData({ drawDate: "", drawType: "DAILY" }); // Reset form
             // Refresh scheduled draws list
-            const updatedDraws = await drawService.getDraws({}); 
+            const updatedDraws = await drawService.getDraws(); 
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
             // alert("Draw scheduled successfully!"); // Replace with better notification
             showNotification("success", "Draw scheduled successfully!");
