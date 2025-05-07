@@ -356,7 +356,7 @@ const DrawManagementRefactored: React.FC = () => {
             setDrawStage("complete");
 
             // Refresh scheduled draws list after execution
-            const updatedDraws = await drawService.getDraws({}); 
+            const updatedDraws = await drawService.getDraws();
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
 
         } catch (err) {
