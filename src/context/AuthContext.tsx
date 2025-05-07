@@ -136,7 +136,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           username: backendUser.username ?? email,
           email: backendUser.email ?? email,
           role: (backendUser.role && ["admin", "manager", "viewer"].includes(backendUser.role.toLowerCase()))
-            ? backendUser.role.toLowerCase() as "admin" | "manager" | "viewer" // Assert type
+            ? backendUser.role.toLowerCase() as "admin" | "manager" | "viewer"
             : "admin", // Default role if validation fails
           name: backendUser.name ?? backendUser.username ?? "User", // Add fallback for name
           createdAt: backendUser.createdAt ?? new Date().toISOString(),
@@ -161,7 +161,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsLoading(false);
         throw new Error(invalidResponseMsg); // Reject promise
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Login error in AuthContext:", err);
       setError(err.message || "An error occurred during login");
       localStorage.removeItem(AUTH_TOKEN_KEY);
@@ -225,6 +225,5 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
 
 
