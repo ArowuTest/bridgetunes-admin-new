@@ -10,7 +10,7 @@ import { Button } from "../components/Button";
 import Modal from "../components/Modal"; // Assuming Modal.tsx is placed in src/components/
 import StatusBadge from "../components/StatusBadge"; // Assuming a StatusBadge component exists
 import { drawService } from "../services/draw.service"; // Import the service instance
-import { Draw, ServicePrizeStructure, ComponentPrizeStructure, Prize, DrawParticipant, UpdatePrizeStructurePayload } from "../types/draw.types"; // Use updated types
+import { Draw, ServicePrizeStructure, ComponentPrizeStructure, Prize, DrawParticipant, UpdatePrizeStructurePayload } from "../types/draw.types";
 
 // Helper function to get day name (e.g., "Monday")
 const getDayOfWeekName = (dayIndex: number): string => {
@@ -220,7 +220,13 @@ const DrawManagementRefactored: React.FC = () => {
     const [isEditSaturdayModalOpen, setIsEditSaturdayModalOpen] = useState(false);
     const [prizeStructureToEdit, setPrizeStructureToEdit] = useState<ComponentPrizeStructure | null>(null);
     // Add state for the edit form fields to make them controlled
-    const [editFormState, setEditFormState] = useState<Partial<ComponentPrizeStructure>>({});
+    const [editFormState, setEditFormState] = useState<Partial<ComponentPrizeStructure>>({
+        jackpot: 0,
+        second: 0,
+        third: 0,
+        consolation: 0,
+        consolationCount: 0
+    });
 
     // --- Derived State --- 
     const selectedYear = selectedDate?.getFullYear();
@@ -362,7 +368,7 @@ const DrawManagementRefactored: React.FC = () => {
             const updatedDraws = await drawService.getDraws(); 
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
 
-        } catch (err: any) {
+        } catch (err:any) {
             console.error("Error executing draw:", err);
             const apiError = err.response?.data?.message || err.message || "Failed to execute draw.";
             setError(`Failed to execute draw ${drawToExecute.id}: ${apiError} (Status: ${err.response?.status || "N/A"})`);
@@ -419,7 +425,13 @@ const DrawManagementRefactored: React.FC = () => {
             setIsEditDailyModalOpen(false);
             setIsEditSaturdayModalOpen(false);
             setPrizeStructureToEdit(null);
-            setEditFormState({}); // Clear form state
+            setEditFormState({
+                jackpot: 0,
+                second: 0,
+                third: 0,
+                consolation: 0,
+                consolationCount: 0
+            }); // Clear form state
             // Re-fetch current structure if it was the one edited
             if (selectedDate) {
                 const dayIndex = selectedDate.getDay();

@@ -174,7 +174,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsLoading(false);
         throw new Error(invalidResponseMsg);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Login error in AuthContext:", err);
       setError(err.message || "An error occurred during login");
       localStorage.removeItem(AUTH_TOKEN_KEY);

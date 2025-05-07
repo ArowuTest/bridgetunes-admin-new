@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
-// Define the structure of the 'draws' prop passed from Dashboard
 interface Draw {
   id: number | string;
   date: string;
@@ -13,7 +12,6 @@ interface Draw {
   status: string;
 }
 
-// Update the props interface to include 'title' and use 'draws'
 interface DataTableProps {
   title: string;
   draws: Draw[];
@@ -35,16 +33,13 @@ const TableTitle = styled.h3`
 `;
 
 const TableContainer = styled.div`
-  height: 400px;
+  height: 400px; /* Or manage height dynamically if needed */
   width: 100%;
 `;
 
 const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
-  // Use state for pagination instead of the deprecated pageSize prop
-  const [paginationModel, setPaginationModel] = useState({
-    pageSize: 5,
-    page: 0,
-  });
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
 
   const columns: GridColDef[] = [
     {
@@ -125,9 +120,16 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
         <DataGrid
           rows={draws}
           columns={columns}
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5]}
+          paginationModel={{
+            page,
+            pageSize,
+          }}
+          onPaginationModelChange={(model) => {
+            setPage(model.page);
+            setPageSize(model.pageSize);
+          }}
+          pageSizeOptions={[5, 10, 20]}
+          pagination
           disableRowSelectionOnClick
           autoHeight
         />
@@ -136,7 +138,6 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
   );
 };
 
-// Add named export alongside default export
 export { RecentDrawsTable };
 export default RecentDrawsTable;
 
