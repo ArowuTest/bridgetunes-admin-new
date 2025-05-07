@@ -73,7 +73,7 @@ const RecentDrawsTable: React.FC<DataTableProps> = ({ title, draws }) => {
       headerName: 'Winners',
       width: 100,
       type: 'number',
-      valueFormatter: (params) => params.value.toLocaleString()
+      valueFormatter: (params) => params.value?.toLocaleString() ?? ''
     },
     {
       field: 'prize',
