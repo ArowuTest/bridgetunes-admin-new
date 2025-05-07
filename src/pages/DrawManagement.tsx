@@ -256,7 +256,7 @@ const DrawManagementRefactored: React.FC = () => {
                     );
                     setSelectedDrawDetails(drawDetails || null);
 
-                } catch (err: any) {
+                } catch (err) {
                     console.error("Error fetching prize structure or draw details:", err);
                     setError(err.message || "Failed to fetch prize structure or draw details.");
                     setCurrentPrizeStructure(null);
@@ -359,7 +359,7 @@ const DrawManagementRefactored: React.FC = () => {
             const updatedDraws = await drawService.getDraws({}); 
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
 
-        } catch (err: any) {
+        } catch (err) {
             console.error("Error executing draw:", err);
             const apiError = err.response?.data?.message || err.message || "Failed to execute draw.";
             setError(`Failed to execute draw ${drawToExecute.id}: ${apiError} (Status: ${err.response?.status || "N/A"})`);
@@ -389,7 +389,7 @@ const DrawManagementRefactored: React.FC = () => {
             } else {
                 setIsEditSaturdayModalOpen(true);
             }
-        } catch (err: any) {
+        } catch (err) {
             console.error(`Error fetching ${type} prize structure for edit:`, err);
             setError(err.message || `Failed to fetch ${type} prize structure.`);
         } finally {
@@ -429,7 +429,7 @@ const DrawManagementRefactored: React.FC = () => {
             }
             // alert("Prize structure updated successfully!"); // Replace with better notification
             showNotification("success", "Prize structure updated successfully!");
-        } catch (err: any) {
+        } catch (err) {
             console.error("Error updating prize structure:", err);
             const apiError = err.message || "Failed to update prize structure.";
             setError(apiError);
@@ -460,7 +460,7 @@ const DrawManagementRefactored: React.FC = () => {
             setScheduledDraws(updatedDraws.filter(d => d.status === "scheduled"));
             // alert("Draw scheduled successfully!"); // Replace with better notification
             showNotification("success", "Draw scheduled successfully!");
-        } catch (err: any) {
+        } catch (err) {
             console.error("Error scheduling draw:", err);
              // Check if the error response has more details
             const apiError = err.response?.data?.message || err.message || "Failed to schedule draw.";
@@ -687,5 +687,4 @@ const DrawManagementRefactored: React.FC = () => {
 };
 
 export default DrawManagementRefactored;
-
 
